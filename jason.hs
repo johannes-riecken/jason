@@ -27,6 +27,7 @@ instance Show Fragment where
   show _ = "TODO"
 
 data Fragment = Bad
+              | Unknown
               | Noun (Shaped Jumble)
               | Verb (JMonad, JDyad)
               | Adverb ((JMonad, JDyad) -> (JMonad, JDyad))
@@ -34,16 +35,15 @@ data Fragment = Bad
               | Copula
               | LParen
               | RParen
-              | Name String
-              | Cash
+
+isName = all isAlpha
 
 jFind :: M.Map String Fragment -> String -> Fragment
 jFind dict s
   | length ws > 1 = maybe Bad (Noun . fromList) $ mapM readJumble ws
   | Just jum <- readJumble s = Noun $ singleton jum
   | s `M.member` vocab = vocab M.! s
-  | all isAlpha s = fromMaybe (Name s) (M.lookup s dict)
-  | otherwise = Bad
+  | isName s = fromMaybe Unknown (M.lookup s dict)
   where ws = words s
 
 main = repl M.empty
@@ -60,8 +60,8 @@ repl dict = do
 
 eval dict s = let
   Right ws = parse jLine "" s
-  xs = Cash : reverse (Cash:(jFind dict <$> filter (not . isPrefixOf "NB.") ws))
-  in run True dict xs []
+  xs = "" : reverse ("":filter (not . isPrefixOf "NB.") ws)
+  in run True dict (zip xs $ repeat Unknown) []
 
 data JMonad = JMonad Int (Shaped Jumble -> Shaped Jumble)
 data JDyad  = JDyad Int Int (Shaped Jumble -> Shaped Jumble -> Shaped Jumble)
@@ -89,7 +89,7 @@ vocab = M.fromList
       ))
   , ("+", Verb
       ( undefined
-      , atomicDyad $ jAdd
+      , atomicDyad jAdd
       ))
   , ("-", Verb
       ( atomicMonad $ jSub (intToJumble 0)
@@ -178,40 +178,46 @@ listsFrom (Shaped rrs xs) (Shaped sss ys)
     q = [V.slice (i*sz) sz ys | i <- [0..s-1]] where sz = product ss
 
 -- http://www.jsoftware.com/help/jforc/parsing_and_execution_ii.htm
+run :: Bool -> M.Map String Fragment -> [(String, Fragment)] -> [(String, Fragment)] -> (Maybe String, M.Map String Fragment)
 run echo dict xs st
   | length st < 4 = shift
   -- 0 Monad
-  | ccl,    (Verb v, Noun n)         <- (x1, x2) =
-    reduce (x0:Noun (verb1 v n):x3:rest)
+  | ccl,    (Verb v, Noun n)         <- (f1, f2) =
+    reduce (x0:makeNoun (verb1 v n):x3:rest)
   -- 1 Monad
-  | cclavn, (Verb _, Verb v, Noun n) <- (x1, x2, x3) =
-    reduce (x0:x1:Noun (verb1 v n):rest)
+  | cclavn, (Verb _, Verb v, Noun n) <- (f1, f2, f3) =
+    reduce (x0:x1:makeNoun (verb1 v n):rest)
   -- 2 Dyad
-  | cclavn, (Noun m, Verb v, Noun n) <- (x1, x2, x3) =
-    reduce (x0:Noun (verb2 v m n):rest)
+  | cclavn, (Noun m, Verb v, Noun n) <- (f1, f2, f3) =
+    reduce (x0:makeNoun (verb2 v m n):rest)
   -- 3 Adverb
-  | cclavn, (Verb v, Adverb a)          <- (x1, x2) =
-    reduce (x0:Verb (a v):x3:rest)
+  | cclavn, (Verb v, Adverb a)       <- (f1, f2) =
+    reduce (x0:makeVerb (a v):x3:rest)
   -- 7 Is
-  | Name s <- x0, Copula <- x1, isCAVN x2 =
-    run False (M.insert s x2 dict) xs (x2:x3:rest)
+  | isName $ fst x0, Copula <- f1, isCAVN f2 =
+    run False (M.insert (fst x0) f2 dict) xs (x2:x3:rest)
   -- 8 Paren
-  | LParen <- x0, isCAVN x1, RParen <- x2 = reduce (x1:x3:rest)
+  | LParen <- f0, isCAVN f1, RParen <- f2 = reduce (x1:x3:rest)
   | otherwise = shift
   where
+    makeNoun x = (show x, Noun x)
+    makeVerb x = ("", Verb x)
     (x0:x1:x2:x3:rest) = st
-    ccl = isCCL x0
-    cclavn = ccl || isAVN x0
+    (f0:f1:f2:f3:_) = toFragment <$> st
+    toFragment (s, f)
+      | Unknown <- f = jFind dict s
+      | otherwise    = f
+    ccl = null (fst x0) || isCL f0
+    cclavn = ccl || isAVN f0
     reduce              = run True dict xs
     shift | (h:t) <- xs = run echo dict t $ h:st
           | otherwise   = (out, dict)
-    out   | [Cash, x, Cash] <- st = if echo then Just $ show x else Nothing
-          | otherwise             = Just $ "syntax error: " ++ show st
+    out   | [_, x, _] <- st = if echo then Just $ show $ toFragment x else Nothing
+          | otherwise       = Just $ "syntax error: " ++ show (fst <$> st)
 
-    isCCL Cash   = True
-    isCCL Copula = True
-    isCCL LParen = True
-    isCCL _      = False
+    isCL Copula = True
+    isCL LParen = True
+    isCL _      = False
 
     isAVN (Adverb _) = True
     isAVN (Verb _)   = True
