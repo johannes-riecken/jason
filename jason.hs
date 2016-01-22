@@ -5,6 +5,7 @@ import Data.Char
 import Data.List
 import Data.Maybe
 import qualified Data.Map.Strict as M
+import qualified Data.Set as S
 import Text.ParserCombinators.Parsec
 import qualified Data.Vector as V
 import Data.Vector ((!))
@@ -67,8 +68,8 @@ data JMonad = JMonad Int (Shaped Jumble -> Shaped Jumble)
 data JDyad  = JDyad Int Int (Shaped Jumble -> Shaped Jumble -> Shaped Jumble)
 
 jZero = intToJumble 0
-verb1 (JMonad r op, _)    = go1 jZero r op
-verb2 (_, JDyad rL rR op) = go2 jZero rL rR op
+verb1 (JMonad mu u, _)   = go1 jZero mu u
+verb2 (_, JDyad lu ru u) = go2 jZero lu ru u
 
 -- Shortcut for J monads of rank 0 that output atoms.
 atomicMonad f = JMonad 0  $ \(Shaped [] xs)
@@ -103,17 +104,45 @@ vocab = M.fromList
       ( atomicMonad $ jDiv (intToJumble 1)
       , atomicDyad jDiv
       ))
+  , ("^", Verb
+      ( atomicMonad jExp
+      , atomicDyad jPow
+      ))
+  , ("^.", Verb
+      ( atomicMonad jLog
+      , undefined
+      ))
+  , ("%:", Verb
+      ( atomicMonad jSqrt
+      , undefined
+      ))
   , ("<", Verb
-      ( JMonad maxBound $ \arg -> Shaped [] $ V.singleton $ jBox arg
+      ( JMonad maxBound $ \x -> singleton $ jBox x
       , atomicDyad jLT
       ))
+  , ("<.", Verb
+      ( atomicMonad undefined
+      , atomicDyad jMin
+      ))
   , (">", Verb
-      ( undefined
+      ( JMonad 0 $ \(Shaped [] x) -> jOpen (x!0)
       , atomicDyad jGT
       ))
   , (">:", Verb
       ( atomicMonad $ jAdd (intToJumble 1)
       , atomicDyad jGE
+      ))
+  , ("=", Verb
+      ( undefined
+      , atomicDyad jEQ
+      ))
+  , ("|", Verb
+      ( atomicMonad jMag
+      , atomicDyad jRes
+      ))
+  , (",", Verb
+      ( JMonad maxBound $ \(Shaped rs xs) -> Shaped [product rs] xs
+      , undefined
       ))
   , (",:", Verb
       ( JMonad maxBound $ \(Shaped rs xs) -> Shaped (1:rs) xs
@@ -121,7 +150,15 @@ vocab = M.fromList
       ))
   , ("#", Verb
       ( JMonad maxBound $ \(Shaped rs _) -> singleton $ intToJumble $ head rs
-      , undefined
+      , JDyad 1 maxBound $ jCopy
+      ))
+  , ("#:", Verb
+      ( JMonad maxBound undefined
+      , JDyad 1 0 jAntibase
+      ))
+  , ("I.", Verb
+      ( JMonad 1 $ jIndices
+      , JDyad maxBound maxBound undefined
       ))
   , ("/:", Verb
       ( undefined
@@ -136,20 +173,28 @@ vocab = M.fromList
       ( JMonad 1 $ \(Shaped rs xs) -> Shaped rs $ jExtend <$> xs
       , undefined
       ))
-  , ("/", Adverb $ \v ->
-    ( JMonad maxBound $ \arg@(Shaped rs xs) -> case rs of
-      [] -> arg
-      (r:rest) -> foldl1' (verb2 v) [Shaped rest $ V.slice (i*sz) sz xs | i <- [0..r-1], let sz = product rest]
+  , ("{.", Verb
+      ( JMonad maxBound jHead
       , undefined
       ))
+  , ("$", Verb
+      ( JMonad maxBound $ \(Shaped rs xs) -> Shaped [length rs] $ V.fromList $ intToJumble <$> rs
+      , undefined
+      ))
+  , ("/", Adverb $ \v@(_, JDyad lu ru op) ->
+    ( JMonad maxBound $ \x@(Shaped rs xs) -> case rs of
+      [] -> x
+      (r:rest) -> foldl1' (verb2 v) [Shaped rest $ V.slice (i*sz) sz xs | i <- [0..r-1], let sz = product rest]
+      , JDyad lu maxBound $ go2 jZero lu ru op
+      ))
   , ("\\", Adverb $ \v ->
-    ( JMonad maxBound $ \arg@(Shaped rs xs) -> case rs of
-      [] -> arg
+    ( JMonad maxBound $ \x@(Shaped rs xs) -> case rs of
+      [] -> x
       (r:rest) -> post [r] $ map (verb1 v) $ zipWith (\i xs -> Shaped (i:rest) xs) [1..r] [V.slice 0 (i*sz) xs | i <- [1..r], let sz = product rest]
       , undefined
       ))
   , ("~", Adverb $ \v@(_, JDyad ru lu _) ->
-    ( JMonad maxBound $ \arg -> verb2 v arg arg
+    ( JMonad maxBound $ \x -> verb2 v x x
     , JDyad ru lu $ \x y -> verb2 v y x
     ))
   , ("/.", Adverb $ \v ->
@@ -160,10 +205,26 @@ vocab = M.fromList
   , ("=.", Copula)
   , ("(", LParen)
   , (")", RParen)
+  , ("&", Conjunction)
   ]
 
+jHead x@(Shaped rrs xs)
+  | null rrs     = x
+  | r == 0 = x
+  | otherwise    = Shaped rs $ V.slice 0 sz xs
+  where
+    (r:rs) = rrs
+    sz = product rs
+
 jKey v x y = let ((_, p), (_:ss, q)) = listsFrom x y
-  in post [length $ nub p] $ map (\ks -> verb1 v $ Shaped (length ks:ss) $ V.concat $ map (q!!) ks) $ (`elemIndices` p) <$> nub p
+  in post [length $ nubFast p] $ map (\ks -> verb1 v $ Shaped (length ks:ss) $ V.concat $ map (q!!) ks) $ (`elemIndices` p) <$> nubFast p
+
+nubFast xs = reverse $ f [] xs S.empty
+  where
+    f acc []     _    = acc
+    f acc (x:xs) seen
+      | x `S.member` seen = f acc xs seen
+      | otherwise         = f (x:acc) xs (S.insert x seen)
 
 jSortUp x@(Shaped rrs _) y = let ((_, p), (_, q)) = listsFrom x y
   in Shaped rrs $ V.concat $ snd <$> sortOn fst (zip q p)
@@ -176,6 +237,42 @@ listsFrom (Shaped rrs xs) (Shaped sss ys)
     (s:ss) = if null sss then 1:sss else sss
     p = [V.slice (i*sz) sz xs | i <- [0..r-1]] where sz = product rs
     q = [V.slice (i*sz) sz ys | i <- [0..s-1]] where sz = product ss
+
+jIndices x@(Shaped rs xs) = let
+  v =  V.concat [V.replicate (jumbleToInt $ xs!i) (intToJumble i) | i <- [0..V.length xs - 1]]
+  in Shaped [V.length v] v
+
+jAntibase :: Shaped Jumble -> Shaped Jumble -> Shaped Jumble
+jAntibase (Shaped rs xs) y@(Shaped [] ys) = Shaped [V.length v] v
+  where
+    v = V.fromList $ intToJumble <$> f [] ms (jumbleToInt $ ys!0)
+    ms = reverse $ jumbleToInt <$> V.toList xs
+    f acc [] _ = acc
+    f acc (m:ms) n = let (q, r) = divMod n m
+      in f (r:acc) ms q
+
+jCopy x@(Shaped rrs xs) y@(Shaped sss ys)
+  | null rrs && null sss = jCopy (Shaped [1] xs) (Shaped [1] ys)
+  | null rrs = let k = jumbleToInt (xs!0) in Shaped (s * k:ss) $ V.concat $ replicate k ys
+  | null sss = let k = V.sum $ jumbleToInt <$> xs in Shaped [k] $ V.replicate k $ ys!0
+  | r /= s = error "length error"
+  | otherwise = let
+    k = V.sum $ jumbleToInt <$> xs
+    sz = product ss
+    in Shaped (k:ss) $ V.concat [V.concat $ replicate (jumbleToInt $ xs!i) $ V.slice (i*sz) sz ys | i <- [0..s-1]]
+  where
+    (s:ss) = sss
+    (r:rs) = rrs
+
+jFork u v w =
+  ( JMonad maxBound $ \x -> verb2 v (verb1 u x) (verb1 w x)
+  , undefined
+  )
+
+jCompose u v@(JMonad mv _, _) =
+  ( JMonad mv $ \x -> verb1 u (verb1 v x)
+  , JDyad mv mv $ \x y -> verb2 u (verb1 v x) (verb1 v y)
+  )
 
 -- http://www.jsoftware.com/help/jforc/parsing_and_execution_ii.htm
 run :: Bool -> M.Map String Fragment -> [(String, Fragment)] -> [(String, Fragment)] -> (Maybe String, M.Map String Fragment)
@@ -193,6 +290,12 @@ run echo dict xs st
   -- 3 Adverb
   | cclavn, (Verb v, Adverb a)       <- (f1, f2) =
     reduce (x0:makeVerb (a v):x3:rest)
+  -- 4 Conjunction
+  | cclavn, (Verb u, Conjunction, Verb v) <- (f1, f2, f3) =
+    reduce (x0:makeVerb (jCompose u v):rest)
+  -- 5 Fork
+  | cclavn, (Verb u, Verb v, Verb w) <- (f1, f2, f3) =
+    reduce (x0:makeVerb (jFork u v w):rest)
   -- 7 Is
   | isName $ fst x0, Copula <- f1, isCAVN f2 =
     run False (M.insert (fst x0) f2 dict) xs (x2:x3:rest)

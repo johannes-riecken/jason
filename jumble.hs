@@ -1,5 +1,8 @@
 module Jumble (Jumble, readJumble, intToJumble, jumbleToInt,
-  jAdd, jSub, jMul, jDiv, jLE, jLT, jGE, jGT, jBox, jExtend,
+  jAdd, jSub, jMul, jDiv, jPow, jExp, jLog, jSqrt,
+  jLE, jLT, jGE, jGT, jEQ, jMin, jMag, jRes,
+  jExtend,
+  jBox, jOpen,
   post) where
 
 import Shaped
@@ -18,7 +21,7 @@ jShowInt n
 
 jShowDouble n
   | n < 0        = '_':jShowDouble (-n)
-  | '.' `elem` s = reverse $ dropWhile (== '0') $ reverse s
+  | '.' `elem` s = reverse $ dropWhile (`elem` "0.") $ reverse s
   | otherwise    = s
   where s = printf "%.6g" n
 
@@ -48,6 +51,7 @@ intToJumble = checkOverflow . fromIntegral
 
 jumbleToInt :: Jumble -> Int
 jumbleToInt (I x) = fromIntegral x
+jumbleToInt (X x) = fromIntegral x
 jumbleToInt _ = error "domain error"
 
 pro (I x) (I y) = (I x, I y)
@@ -71,10 +75,13 @@ pro (Q x) (Z y) = (Z (fromRational x, 0), Z y)
 pro (D x) (Z y) = (Z (x, 0), Z y)
 
 pro (Box x) (Box y) = (Box x, Box y)
+pro _ (Box y) = error "domain error"
 
 pro x y = pro y x
 
 jBox = Box
+jOpen (Box x) = x
+jOpen x = singleton x
 
 maxint = 2^63 - 1
 minint = -2^63
@@ -109,8 +116,40 @@ jSub (I x) (I y) = checkOverflow $ x - y
 jSub (X x) (X y) = X (x - y)
 jSub (Q x) (Q y) = Q (x - y)
 jSub (D x) (D y) = D (x - y)
-jSub (Z (a, b)) (Z (c, d)) = Z (a - c, b - d)
+jSub (Z (a, b)) (Z (c, d)) = let f = b**2 + d**2 in Z ((a - c) / f, (b - d) / f)
 jSub x y = uncurry jSub $ pro x y
+
+jPow (I x) (I y) = checkOverflow $ x^y
+jPow (X x) (X y) = X (x^y)
+jPow (Q x) (Q y) = jPow (D $ fromRational x) (D $ fromRational y)
+jPow (D x) (D y) = D (x**y)
+jPow (Z (a, b)) (Z (c, d)) = undefined -- TODO
+jPow x y = uncurry jPow $ pro x y
+
+jSqrt (I x) = D $ sqrt $ fromIntegral x
+jSqrt (X x) = D $ sqrt $ fromIntegral x
+jSqrt (Q x) = D $ sqrt $ fromRational x
+jSqrt (D x) = D $ sqrt x
+jSqrt (Z x) = undefined -- TODO
+
+jExp (I x) = D $ exp $ fromIntegral x
+jExp (X x) = D $ exp $ fromIntegral x
+jExp (Q x) = D $ exp $ fromRational x
+jExp (D x) = D $ exp x
+jExp (Z x) = undefined -- TODO
+
+jLog (I x) = D $ log $ fromIntegral x
+jLog (X x) = D $ log $ fromIntegral x
+jLog (Q x) = D $ log $ fromRational x
+jLog (D x) = D $ log x
+jLog (Z x) = undefined -- TODO
+
+jRes (I x) (I y) = I $ mod y x
+jRes (X x) (X y) = X $ mod y x
+jRes (Q x) (Q y) = undefined -- TODO
+jRes (D x) (D y) = undefined -- TODO
+jRes (Z (a, b)) (Z (c, d)) = undefined -- TODO
+jRes x y = uncurry jRes $ pro x y
 
 jBool = I . fromIntegral . fromEnum
 
@@ -118,12 +157,22 @@ jLT x y = jBool $ x < y
 jLE x y = jBool $ x <= y
 jGT x y = jBool $ x > y
 jGE x y = jBool $ x >= y
+jEQ x y = jBool $ x == y
+
+jMin x y | x < y = x
+         | otherwise = y
 
 jExtend (I x) = X x
 jExtend (X x) = X x
 jExtend (Q x) = Q x
 jExtend (D x) = Q $ approxRational x 0.0000001
 jExtend (Z x) = error "domain error"
+
+jMag (I x) = I $ abs x
+jMag (X x) = X $ abs x
+jMag (Q x) = Q $ abs x
+jMag (D x) = D $ abs x
+jMag (Z (a, b)) = D $ sqrt $ a^2 + b^2
 
 post :: [Int] -> [Shaped Jumble] -> Shaped Jumble
 post frame xs = typeMatch $ homogenize (intToJumble 0) frame xs
