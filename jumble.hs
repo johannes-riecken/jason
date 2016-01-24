@@ -13,7 +13,12 @@ import Text.Printf
 import qualified Data.Vector as V
 
 -- TODO: Infinity.
-data Jumble = I Integer | X Integer | Q (Ratio Integer) | D Double | Z (Double, Double) | Box (Shaped Jumble) deriving Eq
+data Jumble = I Integer
+            | X Integer
+            | Q (Ratio Integer)
+            | D Double
+            | Z (Double, Double)
+            | Box (Shaped Jumble) deriving Eq
 
 jShowInt n
   | n < 0     = '_':jShowInt (-n)
@@ -36,7 +41,8 @@ instance Ord Jumble where
 instance Show Jumble where
   show (I x) = jShowInt x
   show (X x) = jShowInt x
-  show (Q x) = jShowInt (numerator x) ++ ('r':show (denominator x))
+  show (Q x) = jShowInt (numerator x) ++ (if denominator x == 1
+    then "" else 'r':show (denominator x))
   show (D x) = jShowDouble x
   show (Z (x, y)) = jShowDouble x ++ (if y == 0 then "" else 'j':jShowDouble y)
   show (Box x) = "[" ++ show x ++ "]"
@@ -102,7 +108,8 @@ jDiv (I x) (I y) = jDiv (D $ fromIntegral x) (D $ fromIntegral y)
 jDiv (X x) (X y) = Q (x % y)
 jDiv (Q x) (Q y) = Q (x / y)
 jDiv (D x) (D y) = D (x / y)
-jDiv (Z (a, b)) (Z (c, d)) = Z (a*c + b*d, b*c - a*d)
+jDiv (Z (a, b)) (Z (c, d)) = let f = b**2 + d**2
+  in Z ((a*c + b*d) / f, (b*c - a*d) / f)
 jDiv x y = uncurry jDiv $ pro x y
 
 jAdd (I x) (I y) = checkOverflow $ x + y
@@ -116,10 +123,10 @@ jSub (I x) (I y) = checkOverflow $ x - y
 jSub (X x) (X y) = X (x - y)
 jSub (Q x) (Q y) = Q (x - y)
 jSub (D x) (D y) = D (x - y)
-jSub (Z (a, b)) (Z (c, d)) = let f = b**2 + d**2 in Z ((a - c) / f, (b - d) / f)
+jSub (Z (a, b)) (Z (c, d)) = Z (a - c, b - d)
 jSub x y = uncurry jSub $ pro x y
 
-jPow (I x) (I y) = checkOverflow $ x^y
+jPow (I x) (I y) = D (fromIntegral x ** fromIntegral y)
 jPow (X x) (X y) = X (x^y)
 jPow (Q x) (Q y) = jPow (D $ fromRational x) (D $ fromRational y)
 jPow (D x) (D y) = D (x**y)

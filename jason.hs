@@ -2,6 +2,7 @@ import Control.Monad
 import Jumble
 import Shaped
 import Data.Char
+import Data.Function
 import Data.List
 import Data.Maybe
 import qualified Data.Map.Strict as M
@@ -11,7 +12,6 @@ import qualified Data.Vector as V
 import Data.Vector ((!))
 import System.IO
 
--- Parser.
 jLine :: Parser [String]
 jLine = (map unwords . groupBy ((. isJNum) . (&&) . isJNum)) -- Join numbers.
   <$> (spaces >> many jToken)  -- Eat leading spaces.
@@ -27,6 +27,9 @@ instance Show Fragment where
   show (Noun n) = show n
   show _ = "TODO"
 
+data JMonad = JMonad Int (Shaped Jumble -> Shaped Jumble)
+data JDyad  = JDyad Int Int (Shaped Jumble -> Shaped Jumble -> Shaped Jumble)
+
 data Fragment = Bad
               | Unknown
               | Noun (Shaped Jumble)
@@ -36,16 +39,6 @@ data Fragment = Bad
               | Copula
               | LParen
               | RParen
-
-isName = all isAlpha
-
-jFind :: M.Map String Fragment -> String -> Fragment
-jFind dict s
-  | length ws > 1 = maybe Bad (Noun . fromList) $ mapM readJumble ws
-  | Just jum <- readJumble s = Noun $ singleton jum
-  | s `M.member` vocab = vocab M.! s
-  | isName s = fromMaybe Unknown (M.lookup s dict)
-  where ws = words s
 
 main = repl M.empty
 
@@ -64,82 +57,38 @@ eval dict s = let
   xs = "" : reverse ("":filter (not . isPrefixOf "NB.") ws)
   in run True dict (zip xs $ repeat Unknown) []
 
-data JMonad = JMonad Int (Shaped Jumble -> Shaped Jumble)
-data JDyad  = JDyad Int Int (Shaped Jumble -> Shaped Jumble -> Shaped Jumble)
-
 jZero = intToJumble 0
 verb1 (JMonad mu u, _)   = go1 jZero mu u
 verb2 (_, JDyad lu ru u) = go2 jZero lu ru u
 
 -- Shortcut for J monads of rank 0 that output atoms.
-atomicMonad f = JMonad 0  $ \(Shaped [] xs)
+atomic1 f = JMonad 0  $ \(Shaped [] xs)
   -> singleton $ f (xs!0)
 
 -- Shortcut for J dyads of rank 0 0 that output atoms.
-atomicDyad  f = JDyad 0 0 $ \(Shaped [] xs) (Shaped [] ys)
+atomic2  f = JDyad 0 0 $ \(Shaped [] xs) (Shaped [] ys)
   -> singleton $ f (xs!0) (ys!0)
 
 vocab = M.fromList
-  [ ("+:", Verb
-      ( atomicMonad $ join jAdd
-      , undefined
-      ))
-  , ("*:", Verb
-      ( atomicMonad $ join jMul
-      , undefined
-      ))
-  , ("+", Verb
-      ( undefined
-      , atomicDyad jAdd
-      ))
-  , ("-", Verb
-      ( atomicMonad $ jSub (intToJumble 0)
-      , atomicDyad jSub
-      ))
-  , ("*", Verb
-      ( atomicMonad $ intToJumble . signum . jumbleToInt
-      , atomicDyad jMul
-      ))
-  , ("%", Verb
-      ( atomicMonad $ jDiv (intToJumble 1)
-      , atomicDyad jDiv
-      ))
-  , ("^", Verb
-      ( atomicMonad jExp
-      , atomicDyad jPow
-      ))
-  , ("^.", Verb
-      ( atomicMonad jLog
-      , undefined
-      ))
-  , ("%:", Verb
-      ( atomicMonad jSqrt
-      , undefined
-      ))
-  , ("<", Verb
-      ( JMonad maxBound $ \x -> singleton $ jBox x
-      , atomicDyad jLT
-      ))
-  , ("<.", Verb
-      ( atomicMonad undefined
-      , atomicDyad jMin
-      ))
-  , (">", Verb
-      ( JMonad 0 $ \(Shaped [] x) -> jOpen (x!0)
-      , atomicDyad jGT
-      ))
-  , (">:", Verb
-      ( atomicMonad $ jAdd (intToJumble 1)
-      , atomicDyad jGE
-      ))
-  , ("=", Verb
-      ( undefined
-      , atomicDyad jEQ
-      ))
-  , ("|", Verb
-      ( atomicMonad jMag
-      , atomicDyad jRes
-      ))
+  [ ("+:", Verb (atomic1 $ join jAdd, undefined))
+  , ("*:", Verb (atomic1 $ join jMul, undefined))
+  , ("+", Verb (undefined, atomic2 jAdd))
+  , ("-", Verb (atomic1 $ jSub $ intToJumble 0, atomic2 jSub))
+  , ("*", Verb (atomic1 $ intToJumble . signum . jumbleToInt, atomic2 jMul))
+  , ("%", Verb (atomic1 $ jDiv (intToJumble 1), atomic2 jDiv))
+  , ("^", Verb (atomic1 jExp, atomic2 jPow))
+  , ("^.", Verb (atomic1 jLog, undefined))
+  , ("%:", Verb (atomic1 jSqrt, undefined))
+  , ("<", Verb (JMonad maxBound $ \x -> singleton $ jBox x, atomic2 jLT))
+  , ("<.", Verb (atomic1 undefined, atomic2 jMin))
+  , (">", Verb (JMonad 0 $ \(Shaped [] x) -> jOpen (x!0), atomic2 jGT))
+  , (">:", Verb (atomic1 $ jAdd (intToJumble 1), atomic2 jGE))
+  , ("=", Verb (undefined, atomic2 jEQ))
+  , ("|", Verb (atomic1 jMag, atomic2 jRes))
+  , ("#:", Verb (JMonad maxBound undefined, JDyad 1 0 jAntibase))
+  , ("I.", Verb (JMonad 1 jIndices, JDyad maxBound maxBound undefined))
+  , ("/:", Verb (undefined, JDyad maxBound maxBound jSortUp))
+  , ("{.", Verb (JMonad maxBound jHead, undefined))
   , (",", Verb
       ( JMonad maxBound $ \(Shaped rs xs) -> Shaped [product rs] xs
       , undefined
@@ -150,19 +99,7 @@ vocab = M.fromList
       ))
   , ("#", Verb
       ( JMonad maxBound $ \(Shaped rs _) -> singleton $ intToJumble $ head rs
-      , JDyad 1 maxBound $ jCopy
-      ))
-  , ("#:", Verb
-      ( JMonad maxBound undefined
-      , JDyad 1 0 jAntibase
-      ))
-  , ("I.", Verb
-      ( JMonad 1 $ jIndices
-      , JDyad maxBound maxBound undefined
-      ))
-  , ("/:", Verb
-      ( undefined
-      , JDyad maxBound maxBound jSortUp
+      , JDyad 1 maxBound jCopy
       ))
   , ("i.", Verb
       ( JMonad 1 $ \(Shaped _ xs) -> let ns = jumbleToInt <$> V.toList xs
@@ -171,10 +108,6 @@ vocab = M.fromList
       ))
   , ("x:", Verb
       ( JMonad 1 $ \(Shaped rs xs) -> Shaped rs $ jExtend <$> xs
-      , undefined
-      ))
-  , ("{.", Verb
-      ( JMonad maxBound jHead
       , undefined
       ))
   , ("$", Verb
@@ -193,13 +126,10 @@ vocab = M.fromList
       (r:rest) -> post [r] $ map (verb1 v) $ zipWith (\i xs -> Shaped (i:rest) xs) [1..r] [V.slice 0 (i*sz) xs | i <- [1..r], let sz = product rest]
       , undefined
       ))
+  , ("/.", Adverb $ \v -> (undefined, JDyad maxBound maxBound $ jKey v))
   , ("~", Adverb $ \v@(_, JDyad ru lu _) ->
     ( JMonad maxBound $ \x -> verb2 v x x
     , JDyad ru lu $ \x y -> verb2 v y x
-    ))
-  , ("/.", Adverb $ \v ->
-    ( undefined
-    , JDyad maxBound maxBound $ jKey v
     ))
   , ("=:", Copula)
   , ("=.", Copula)
@@ -264,37 +194,46 @@ jCopy x@(Shaped rrs xs) y@(Shaped sss ys)
     (s:ss) = sss
     (r:rs) = rrs
 
+jCompose u v@(JMonad mv _, _) =
+  ( JMonad mv $ verb1 u . verb1 v
+  , JDyad mv mv (verb2 u `on` verb1 v)
+  )
+
 jFork u v w =
-  ( JMonad maxBound $ \x -> verb2 v (verb1 u x) (verb1 w x)
+  ( JMonad maxBound $ verb2 v <$> verb1 u <*> verb1 w
   , undefined
   )
 
-jCompose u v@(JMonad mv _, _) =
-  ( JMonad mv $ \x -> verb1 u (verb1 v x)
-  , JDyad mv mv $ \x y -> verb2 u (verb1 v x) (verb1 v y)
-  )
+isName = all isAlpha
 
--- http://www.jsoftware.com/help/jforc/parsing_and_execution_ii.htm
+jFind :: M.Map String Fragment -> String -> Fragment
+jFind dict s
+  | length ws > 1 = maybe Bad (Noun . fromList) $ mapM readJumble ws
+  | Just jum <- readJumble s = Noun $ singleton jum
+  | s `M.member` vocab = vocab M.! s
+  | isName s = fromMaybe Unknown (M.lookup s dict)
+  where ws = words s
+
 run :: Bool -> M.Map String Fragment -> [(String, Fragment)] -> [(String, Fragment)] -> (Maybe String, M.Map String Fragment)
 run echo dict xs st
   | length st < 4 = shift
   -- 0 Monad
-  | ccl,    (Verb v, Noun n)         <- (f1, f2) =
+  | cl,    (Verb v, Noun n)         <- (f1, f2) =
     reduce (x0:makeNoun (verb1 v n):x3:rest)
   -- 1 Monad
-  | cclavn, (Verb _, Verb v, Noun n) <- (f1, f2, f3) =
+  | clavn, (Verb _, Verb v, Noun n) <- (f1, f2, f3) =
     reduce (x0:x1:makeNoun (verb1 v n):rest)
   -- 2 Dyad
-  | cclavn, (Noun m, Verb v, Noun n) <- (f1, f2, f3) =
+  | clavn, (Noun m, Verb v, Noun n) <- (f1, f2, f3) =
     reduce (x0:makeNoun (verb2 v m n):rest)
   -- 3 Adverb
-  | cclavn, (Verb v, Adverb a)       <- (f1, f2) =
+  | clavn, (Verb v, Adverb a)       <- (f1, f2) =
     reduce (x0:makeVerb (a v):x3:rest)
   -- 4 Conjunction
-  | cclavn, (Verb u, Conjunction, Verb v) <- (f1, f2, f3) =
+  | clavn, (Verb u, Conjunction, Verb v) <- (f1, f2, f3) =
     reduce (x0:makeVerb (jCompose u v):rest)
   -- 5 Fork
-  | cclavn, (Verb u, Verb v, Verb w) <- (f1, f2, f3) =
+  | clavn, (Verb u, Verb v, Verb w) <- (f1, f2, f3) =
     reduce (x0:makeVerb (jFork u v w):rest)
   -- 7 Is
   | isName $ fst x0, Copula <- f1, isCAVN f2 =
@@ -310,8 +249,8 @@ run echo dict xs st
     toFragment (s, f)
       | Unknown <- f = jFind dict s
       | otherwise    = f
-    ccl = null (fst x0) || isCL f0
-    cclavn = ccl || isAVN f0
+    cl = null (fst x0) || isCL f0
+    clavn = cl || isAVN f0
     reduce              = run True dict xs
     shift | (h:t) <- xs = run echo dict t $ h:st
           | otherwise   = (out, dict)

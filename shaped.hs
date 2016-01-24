@@ -41,32 +41,40 @@ homogenize z frame xs = let
   in Shaped (frame ++ resultRank) $ V.concat $ fill z resultRank <$> xs
 
 go1 :: a -> Int -> (Shaped a -> Shaped a) -> Shaped a -> Shaped a
-go1 z r op (Shaped shape xs) = let
-  (frame, rank) = splitAt (length shape - min r (length shape)) shape
-  sz = product rank
-  xn = V.length xs `div` sz
-  in homogenize z frame [op (Shaped rank $ V.slice (i*sz) sz xs) | i <- [0..xn-1]]
+go1 z mv v (Shaped shape xs) = homogenize z frame
+  [v (Shaped rank $ V.slice (i*sz) sz xs) | i <- [0..product frame-1]]
+  where
+    (frame, rank) = splitAt (length shape - min mv (length shape)) shape
+    sz = product rank
 
 go2 :: a -> Int -> Int -> (Shaped a -> Shaped a -> Shaped a) ->
   Shaped a -> Shaped a -> Shaped a
-go2 z rL rR op (Shaped shapeX xs) (Shaped shapeY ys)
+go2 z lv rv v (Shaped shapeX xs) (Shaped shapeY ys)
   | or $ zipWith (/=) frameX frameY = error "frame mismatch"
   | length frameX > length frameY =
-    f (flip op) (frameY, rankY) ys (frameX, rankX) xs
+    f (flip v) (frameY, rankY) ys (frameX, rankX) xs
   | otherwise =
-    f        op (frameX, rankX) xs (frameY, rankY) ys
+    f        v (frameX, rankX) xs (frameY, rankY) ys
   where
-    dimL = length shapeX - min rL (length shapeX)
-    dimR = length shapeY - min rR (length shapeY)
+    dimL = length shapeX - min lv (length shapeX)
+    dimR = length shapeY - min rv (length shapeY)
     (frameX, rankX) = splitAt dimL shapeX
     (frameY, rankY) = splitAt dimR shapeY
 
-    f op (frameX, rankX) xs (frameY, rankY) ys = let
-      xsize = product rankX
-      ysize = product rankY
-      m = div (V.length ys * xsize) (V.length xs * ysize)
-      xn = V.length xs `div` xsize
-      in homogenize z frameY $ concat [[op (Shaped rankX $ V.slice (i*xsize) xsize xs) (Shaped rankY $ V.slice ((i*m + j)*ysize) ysize ys) | j <- [0..m-1] ] | i <- [0..xn-1]]
+    f v (frameX, rankX) xs (frameY, rankY) ys = homogenize z frameY $
+       concat [[v (Shaped rankX $ V.slice (i*xsize) xsize xs)
+                  (Shaped rankY $ V.slice ((i*m + j)*ysize) ysize ys)
+                | j <- [0..m-1] ] | i <- [0..product frameX-1]]
+      where
+        xsize = product rankX
+        ysize = product rankY
+        m = div (V.length ys * xsize) (V.length xs * ysize)
+
+test1 :: (a -> a) -> Shaped a -> Shaped a
+test1 f (Shaped [] xs) = singleton (f $ xs!0)
+
+test2 :: (a -> a -> a) -> Shaped a -> Shaped a -> Shaped a
+test2 f (Shaped [] xs) (Shaped [] ys) = singleton (f (xs!0) (ys!0))
 
 {-
 --hDyad :: (Int -> Int -> Int) -> Noun -> Noun -> Noun
