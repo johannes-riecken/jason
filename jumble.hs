@@ -1,6 +1,6 @@
-module Jumble (Jumble, readJumble, intToJumble, jumbleToInt,
+module Jumble (Jumble, readJumble, intToJumble, jumbleToInt, jImaginary,
   jAdd, jSub, jMul, jDiv, jPow, jExp, jLog, jSqrt,
-  jLE, jLT, jGE, jGT, jEQ, jMin, jMag, jRes,
+  jLE, jLT, jGE, jGT, jEQ, jMin, jMag, jRes, jFloor,
   jExtend,
   jBox, jOpen,
   post) where
@@ -18,6 +18,7 @@ data Jumble = I Integer
             | Q (Ratio Integer)
             | D Double
             | Z (Double, Double)
+            | S String
             | Box (Shaped Jumble) deriving Eq
 
 jShowInt n
@@ -39,6 +40,7 @@ instance Ord Jumble where
   compare x y = uncurry compare $ pro x y
 
 instance Show Jumble where
+  show (S x) = x
   show (I x) = jShowInt x
   show (X x) = jShowInt x
   show (Q x) = jShowInt (numerator x) ++ (if denominator x == 1
@@ -49,8 +51,9 @@ instance Show Jumble where
 
 readJumble :: String -> Maybe Jumble
 readJumble s
-  | all isDigit s = Just $ checkOverflow (read s :: Integer)
-  | otherwise     = Nothing
+  | all isDigit s  = Just $ checkOverflow (read s :: Integer)
+  | head s == '\'' = Just $ S $ init $ tail s
+  | otherwise      = Nothing
 
 intToJumble :: Integral a => a -> Jumble
 intToJumble = checkOverflow . fromIntegral
@@ -180,6 +183,14 @@ jMag (X x) = X $ abs x
 jMag (Q x) = Q $ abs x
 jMag (D x) = D $ abs x
 jMag (Z (a, b)) = D $ sqrt $ a^2 + b^2
+
+jFloor (I x) = I x
+jFloor (X x) = X x
+jFloor (Q x) = X (floor x)
+jFloor (D x) = I (floor x)
+jFloor (Z (x, y)) = undefined -- TODO
+
+jImaginary = (Z (0, 1))
 
 post :: [Int] -> [Shaped Jumble] -> Shaped Jumble
 post frame xs = typeMatch $ homogenize (intToJumble 0) frame xs

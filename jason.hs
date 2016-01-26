@@ -18,10 +18,16 @@ jLine = (map unwords . groupBy ((. isJNum) . (&&) . isJNum)) -- Join numbers.
 
 isJNum s@(c:_) = (isDigit c || c == '_') && last s `notElem` ".:"
 
-jToken = (string "NB." >>= (<$> many anyChar) . (++)) <|> ((++) <$>  -- NB.
-  (many1 (char '_' <|> alphaNum) <|> count 1 anyChar)  -- e.g. "ab_12" or "#".
-  <*> many (oneOf ".:")                                -- e.g. "..:.:.::.".
-  >>= (spaces >>) . return)                            -- Eat trailing spaces.
+jToken =
+    ( (string "NB." >>= (<$> many anyChar) . (++)) -- NB.
+  <|> do
+    char '\''
+    s <- concat <$> many (many1 (noneOf "'") <|> try (string "''"))
+    char '\'' <?> "closing quote"
+    return $ concat ["'", s, "'"]
+  <|> ((++) <$> (many1 (char '_' <|> alphaNum) <|> count 1 anyChar)
+  <*> many (oneOf ".:")) -- e.g. "ab_12" or "#" followed by e.g. "..:.:.::.".
+    ) >>= (spaces >>) . return -- Eat trailing spaces.
 
 instance Show Fragment where
   show (Noun n) = show n
@@ -31,11 +37,10 @@ data JMonad = JMonad Int (Shaped Jumble -> Shaped Jumble)
 data JDyad  = JDyad Int Int (Shaped Jumble -> Shaped Jumble -> Shaped Jumble)
 
 data Fragment = Bad
-              | Unknown
               | Noun (Shaped Jumble)
               | Verb (JMonad, JDyad)
               | Adverb ((JMonad, JDyad) -> (JMonad, JDyad))
-              | Conjunction
+              | Conjunction ((JMonad, JDyad) -> (JMonad, JDyad) -> (JMonad, JDyad))
               | Copula
               | LParen
               | RParen
@@ -52,10 +57,11 @@ repl dict = do
     unless (isNothing out) $ putStrLn $ fromJust out
     repl dict'
 
-eval dict s = let
-  Right ws = parse jLine "" s
-  xs = "" : reverse ("":filter (not . isPrefixOf "NB.") ws)
-  in run True dict (zip xs $ repeat Unknown) []
+eval dict s = case parse jLine "" s of
+  Left err -> (Just $ "| " ++ show err, dict)
+  Right ws -> let
+    xs = "" : reverse ("":filter (not . isPrefixOf "NB.") ws)
+    in run True dict xs []
 
 jZero = intToJumble 0
 verb1 (JMonad mu u, _)   = go1 jZero mu u
@@ -80,7 +86,7 @@ vocab = M.fromList
   , ("^.", Verb (atomic1 jLog, undefined))
   , ("%:", Verb (atomic1 jSqrt, undefined))
   , ("<", Verb (JMonad maxBound $ \x -> singleton $ jBox x, atomic2 jLT))
-  , ("<.", Verb (atomic1 undefined, atomic2 jMin))
+  , ("<.", Verb (atomic1 jFloor, atomic2 jMin))
   , (">", Verb (JMonad 0 $ \(Shaped [] x) -> jOpen (x!0), atomic2 jGT))
   , (">:", Verb (atomic1 $ jAdd (intToJumble 1), atomic2 jGE))
   , ("=", Verb (undefined, atomic2 jEQ))
@@ -105,6 +111,10 @@ vocab = M.fromList
       ( JMonad 1 $ \(Shaped _ xs) -> let ns = jumbleToInt <$> V.toList xs
           in shapeList ns $ intToJumble <$> [0..product ns - 1]
       , undefined
+      ))
+  , ("j.", Verb
+      ( atomic1 $ jMul jImaginary
+      , atomic2 $ \x y -> jAdd x (jMul jImaginary y)
       ))
   , ("x:", Verb
       ( JMonad 1 $ \(Shaped rs xs) -> Shaped rs $ jExtend <$> xs
@@ -135,7 +145,8 @@ vocab = M.fromList
   , ("=.", Copula)
   , ("(", LParen)
   , (")", RParen)
-  , ("&", Conjunction)
+  , ("@", Conjunction jAtop)
+  , ("&", Conjunction jCompose)
   ]
 
 jHead x@(Shaped rrs xs)
@@ -194,6 +205,11 @@ jCopy x@(Shaped rrs xs) y@(Shaped sss ys)
     (s:ss) = sss
     (r:rs) = rrs
 
+jAtop u v@(JMonad mv _, _) =
+  ( JMonad mv $ verb1 u . verb1 v
+  , JDyad mv mv $ (verb1 u .) .  verb2 v
+  )
+
 jCompose u v@(JMonad mv _, _) =
   ( JMonad mv $ verb1 u . verb1 v
   , JDyad mv mv (verb2 u `on` verb1 v)
@@ -201,7 +217,12 @@ jCompose u v@(JMonad mv _, _) =
 
 jFork u v w =
   ( JMonad maxBound $ verb2 v <$> verb1 u <*> verb1 w
-  , undefined
+  , JDyad maxBound maxBound $ \x y -> verb2 v (verb2 u x y) (verb2 w x y)
+  )
+
+jHook u v =
+  ( JMonad maxBound $ \y -> verb2 u y (verb1 v y)
+  , JDyad maxBound maxBound $ \x y -> verb2 u x (verb1 v y)
   )
 
 isName = all isAlpha
@@ -211,10 +232,11 @@ jFind dict s
   | length ws > 1 = maybe Bad (Noun . fromList) $ mapM readJumble ws
   | Just jum <- readJumble s = Noun $ singleton jum
   | s `M.member` vocab = vocab M.! s
-  | isName s = fromMaybe Unknown (M.lookup s dict)
+  | isName s = fromMaybe Bad (M.lookup s dict)
+  | otherwise = LParen
   where ws = words s
 
-run :: Bool -> M.Map String Fragment -> [(String, Fragment)] -> [(String, Fragment)] -> (Maybe String, M.Map String Fragment)
+run :: Bool -> M.Map String Fragment -> [String] -> [(String, Fragment)] -> (Maybe String, M.Map String Fragment)
 run echo dict xs st
   | length st < 4 = shift
   -- 0 Monad
@@ -230,11 +252,14 @@ run echo dict xs st
   | clavn, (Verb v, Adverb a)       <- (f1, f2) =
     reduce (x0:makeVerb (a v):x3:rest)
   -- 4 Conjunction
-  | clavn, (Verb u, Conjunction, Verb v) <- (f1, f2, f3) =
-    reduce (x0:makeVerb (jCompose u v):rest)
+  | clavn, (Verb u, Conjunction c, Verb v) <- (f1, f2, f3) =
+    reduce (x0:makeVerb (c u v):rest)
   -- 5 Fork
   | clavn, (Verb u, Verb v, Verb w) <- (f1, f2, f3) =
     reduce (x0:makeVerb (jFork u v w):rest)
+  -- 6 Hook
+  | cl,    (Verb u, Verb v) <- (f1, f2) =
+    reduce (x0:makeVerb (jHook u v):x3:rest)
   -- 7 Is
   | isName $ fst x0, Copula <- f1, isCAVN f2 =
     run False (M.insert (fst x0) f2 dict) xs (x2:x3:rest)
@@ -245,16 +270,14 @@ run echo dict xs st
     makeNoun x = (show x, Noun x)
     makeVerb x = ("", Verb x)
     (x0:x1:x2:x3:rest) = st
-    (f0:f1:f2:f3:_) = toFragment <$> st
-    toFragment (s, f)
-      | Unknown <- f = jFind dict s
-      | otherwise    = f
+    (f0:f1:f2:f3:_) = snd <$> st
     cl = null (fst x0) || isCL f0
     clavn = cl || isAVN f0
     reduce              = run True dict xs
-    shift | (h:t) <- xs = run echo dict t $ h:st
+    shift | (h:t) <- xs = run echo dict t $ (h, jFind dict h):st
           | otherwise   = (out, dict)
-    out   | [_, x, _] <- st = if echo then Just $ show $ toFragment x else Nothing
+    out   | [_, _]    <- st = Nothing
+          | [_, x, _] <- st = if echo then Just $ show $ snd x else Nothing
           | otherwise       = Just $ "syntax error: " ++ show (fst <$> st)
 
     isCL Copula = True
@@ -266,5 +289,5 @@ run echo dict xs st
     isAVN (Noun _)   = True
     isAVN _          = False
 
-    isCAVN Conjunction = True
-    isCAVN x           = isAVN x
+    isCAVN (Conjunction _) = True
+    isCAVN x               = isAVN x
