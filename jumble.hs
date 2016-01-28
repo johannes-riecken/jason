@@ -3,6 +3,7 @@ module Jumble (Jumble, readJumble, intToJumble, jumbleToInt, jImaginary,
   jLE, jLT, jGE, jGT, jEQ, jMin, jMag, jRes, jFloor,
   jExtend,
   jBox, jOpen,
+  jGets, jPuts,
   post) where
 
 import Shaped
@@ -57,6 +58,13 @@ readJumble s
 
 intToJumble :: Integral a => a -> Jumble
 intToJumble = checkOverflow . fromIntegral
+
+jGets (Box (Shaped [] xs))
+  | S s <- xs V.! 0 = Just s
+  | otherwise   = Nothing
+jGets _ = Nothing
+
+jPuts s = jBox $ singleton $ S s
 
 jumbleToInt :: Jumble -> Int
 jumbleToInt (I x) = fromIntegral x

@@ -4,9 +4,10 @@ import Shaped
 import Data.Char
 import Data.Function
 import Data.List
-import Data.Maybe
 import qualified Data.Map.Strict as M
+import Data.Maybe
 import qualified Data.Set as S
+import Data.Tree
 import Text.ParserCombinators.Parsec
 import qualified Data.Vector as V
 import Data.Vector ((!))
@@ -44,6 +45,7 @@ data Fragment = Bad
               | Copula
               | LParen
               | RParen
+              | Edge
 
 main = repl M.empty
 
@@ -229,6 +231,7 @@ isName = all isAlpha
 
 jFind :: M.Map String Fragment -> String -> Fragment
 jFind dict s
+  | null s = Edge
   | length ws > 1 = maybe Bad (Noun . fromList) $ mapM readJumble ws
   | Just jum <- readJumble s = Noun $ singleton jum
   | s `M.member` vocab = vocab M.! s
@@ -236,7 +239,7 @@ jFind dict s
   | otherwise = LParen
   where ws = words s
 
-run :: Bool -> M.Map String Fragment -> [String] -> [(String, Fragment)] -> (Maybe String, M.Map String Fragment)
+run :: Bool -> M.Map String Fragment -> [String] -> [(Jumble, Fragment)] -> (Maybe String, M.Map String Fragment)
 run echo dict xs st
   | length st < 4 = shift
   -- 0 Monad
@@ -250,36 +253,37 @@ run echo dict xs st
     reduce (x0:makeNoun (verb2 v m n):rest)
   -- 3 Adverb
   | clavn, (Verb v, Adverb a)       <- (f1, f2) =
-    reduce (x0:makeVerb (a v):x3:rest)
+    reduce (x0:(jBox $ Shaped [2] $ V.fromList [j2, jBox $ singleton j1], Verb $ a v):x3:rest)
   -- 4 Conjunction
   | clavn, (Verb u, Conjunction c, Verb v) <- (f1, f2, f3) =
-    reduce (x0:makeVerb (c u v):rest)
+    reduce (x0:(jBox $ Shaped [2] $ V.fromList [j2, jBox $ Shaped [2] $ V.fromList [j1, j3]], Verb $ c u v):rest)
   -- 5 Fork
   | clavn, (Verb u, Verb v, Verb w) <- (f1, f2, f3) =
-    reduce (x0:makeVerb (jFork u v w):rest)
+    reduce (x0:(jBox $ Shaped [2] $ V.fromList [jBox $ singleton $ intToJumble 3, jBox $ Shaped [3] $ V.fromList [j1, j2, j3]], Verb $ jFork u v w):rest)
   -- 6 Hook
   | cl,    (Verb u, Verb v) <- (f1, f2) =
-    reduce (x0:makeVerb (jHook u v):x3:rest)
+    reduce (x0:(jBox $ Shaped [2] $ V.fromList [jBox $ singleton $ intToJumble 2, jBox $ Shaped [2] $ V.fromList [j1, j2]], Verb $ jHook u v):x3:rest)
   -- 7 Is
-  | isName $ fst x0, Copula <- f1, isCAVN f2 =
-    run False (M.insert (fst x0) f2 dict) xs (x2:x3:rest)
+  | Just name <- jGets j0, Copula <- f1, isCAVN f2 =
+    run False (M.insert name f2 dict) xs (x2:x3:rest)
   -- 8 Paren
   | LParen <- f0, isCAVN f1, RParen <- f2 = reduce (x1:x3:rest)
   | otherwise = shift
   where
-    makeNoun x = (show x, Noun x)
-    makeVerb x = ("", Verb x)
+    makeNoun x = (jBox x, Noun x)
     (x0:x1:x2:x3:rest) = st
+    (j0:j1:j2:j3:_) = fst <$> st
     (f0:f1:f2:f3:_) = snd <$> st
-    cl = null (fst x0) || isCL f0
+    cl = isCL f0
     clavn = cl || isAVN f0
     reduce              = run True dict xs
-    shift | (h:t) <- xs = run echo dict t $ (h, jFind dict h):st
+    shift | (h:t) <- xs = run echo dict t $ (jPuts h, jFind dict h):st
           | otherwise   = (out, dict)
     out   | [_, _]    <- st = Nothing
           | [_, x, _] <- st = if echo then Just $ show $ snd x else Nothing
-          | otherwise       = Just $ "syntax error: " ++ show (fst <$> st)
+          | otherwise       = Just $ "syntax error: " ++ show st
 
+    isCL Edge = True
     isCL Copula = True
     isCL LParen = True
     isCL _      = False
