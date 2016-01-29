@@ -1,3 +1,4 @@
+import Debug.Trace
 import Control.Monad
 import Jumble
 import Shaped
@@ -41,7 +42,7 @@ data Fragment = Bad
               | Noun (Shaped Jumble)
               | Verb (JMonad, JDyad)
               | Adverb ((JMonad, JDyad) -> (JMonad, JDyad))
-              | Conjunction ((JMonad, JDyad) -> (JMonad, JDyad) -> (JMonad, JDyad))
+              | Conjunction ((Jumble, Fragment) -> (Jumble, Fragment) -> Fragment)
               | Copula
               | LParen
               | RParen
@@ -77,56 +78,62 @@ atomic1 f = JMonad 0  $ \(Shaped [] xs)
 atomic2  f = JDyad 0 0 $ \(Shaped [] xs) (Shaped [] ys)
   -> singleton $ f (xs!0) (ys!0)
 
-vocab = M.fromList
-  [ ("+:", Verb (atomic1 $ join jAdd, undefined))
-  , ("*:", Verb (atomic1 $ join jMul, undefined))
-  , ("+", Verb (undefined, atomic2 jAdd))
-  , ("-", Verb (atomic1 $ jSub $ intToJumble 0, atomic2 jSub))
-  , ("*", Verb (atomic1 $ intToJumble . signum . jumbleToInt, atomic2 jMul))
-  , ("%", Verb (atomic1 $ jDiv (intToJumble 1), atomic2 jDiv))
-  , ("^", Verb (atomic1 jExp, atomic2 jPow))
-  , ("^.", Verb (atomic1 jLog, undefined))
-  , ("%:", Verb (atomic1 jSqrt, undefined))
-  , ("<", Verb (JMonad maxBound $ \x -> singleton $ jBox x, atomic2 jLT))
-  , ("<.", Verb (atomic1 jFloor, atomic2 jMin))
-  , (">", Verb (JMonad 0 $ \(Shaped [] x) -> jOpen (x!0), atomic2 jGT))
-  , (">:", Verb (atomic1 $ jAdd (intToJumble 1), atomic2 jGE))
-  , ("=", Verb (undefined, atomic2 jEQ))
-  , ("|", Verb (atomic1 jMag, atomic2 jRes))
-  , ("#:", Verb (JMonad maxBound undefined, JDyad 1 0 jAntibase))
-  , ("I.", Verb (JMonad 1 jIndices, JDyad maxBound maxBound undefined))
-  , ("/:", Verb (undefined, JDyad maxBound maxBound jSortUp))
-  , ("{.", Verb (JMonad maxBound jHead, undefined))
-  , (",", Verb
+verbDict  = M.fromList
+  [ ("+:", (atomic1 $ join jAdd, undefined))
+  , ("*:", (atomic1 $ join jMul, undefined))
+  , ("-:", (atomic1 $ flip jDiv (intToJumble 2), undefined))
+  , ("+", (undefined, atomic2 jAdd))
+  , ("-", (atomic1 $ jSub $ intToJumble 0, atomic2 jSub))
+  , ("*", (atomic1 $ intToJumble . signum . jumbleToInt, atomic2 jMul))
+  , ("%", (atomic1 $ jDiv (intToJumble 1), atomic2 jDiv))
+  , ("^", (atomic1 jExp, atomic2 jPow))
+  , ("^.", (atomic1 jLog, undefined))
+  , ("%:", (atomic1 jSqrt, undefined))
+  , ("<", (JMonad maxBound $ \x -> singleton $ jBox x, atomic2 jLT))
+  , ("<.", (atomic1 jFloor, atomic2 jMin))
+  , (">", (JMonad 0 $ \(Shaped [] x) -> jOpen (x!0), atomic2 jGT))
+  , (">:", (atomic1 $ jAdd (intToJumble 1), atomic2 jGE))
+  , ("=", (undefined, atomic2 jEQ))
+  , ("|", (atomic1 jMag, atomic2 jRes))
+  , ("#:", (JMonad maxBound undefined, JDyad 1 0 jAntibase))
+  , ("I.", (JMonad 1 jIndices, JDyad maxBound maxBound undefined))
+  , ("/:", (undefined, JDyad maxBound maxBound jSortUp))
+  , ("{.", (JMonad maxBound jHead, undefined))
+  , ("1:", (JMonad maxBound $ const $ singleton $ intToJumble 1,
+            JDyad maxBound maxBound $ \_ _ -> singleton $ intToJumble 1))
+  , (",",
       ( JMonad maxBound $ \(Shaped rs xs) -> Shaped [product rs] xs
       , undefined
       ))
-  , (",:", Verb
+  , (",:",
       ( JMonad maxBound $ \(Shaped rs xs) -> Shaped (1:rs) xs
       , JDyad maxBound maxBound $ \x y -> post [2] [x, y]
       ))
-  , ("#", Verb
+  , ("#",
       ( JMonad maxBound $ \(Shaped rs _) -> singleton $ intToJumble $ head rs
       , JDyad 1 maxBound jCopy
       ))
-  , ("i.", Verb
+  , ("i.",
       ( JMonad 1 $ \(Shaped _ xs) -> let ns = jumbleToInt <$> V.toList xs
           in shapeList ns $ intToJumble <$> [0..product ns - 1]
       , undefined
       ))
-  , ("j.", Verb
+  , ("j.",
       ( atomic1 $ jMul jImaginary
       , atomic2 $ \x y -> jAdd x (jMul jImaginary y)
       ))
-  , ("x:", Verb
+  , ("x:",
       ( JMonad 1 $ \(Shaped rs xs) -> Shaped rs $ jExtend <$> xs
       , undefined
       ))
-  , ("$", Verb
+  , ("$",
       ( JMonad maxBound $ \(Shaped rs xs) -> Shaped [length rs] $ V.fromList $ intToJumble <$> rs
       , undefined
       ))
-  , ("/", Adverb $ \v@(_, JDyad lu ru op) ->
+  ]
+
+vocab = M.fromList
+  [ ("/", Adverb $ \v@(_, JDyad lu ru op) ->
     ( JMonad maxBound $ \x@(Shaped rs xs) -> case rs of
       [] -> x
       (r:rest) -> foldl1' (verb2 v) [Shaped rest $ V.slice (i*sz) sz xs | i <- [0..r-1], let sz = product rest]
@@ -147,8 +154,10 @@ vocab = M.fromList
   , ("=.", Copula)
   , ("(", LParen)
   , (")", RParen)
-  , ("@", Conjunction jAtop)
+  , ("@", Conjunction $ simpleConjunction jAtop)
   , ("&", Conjunction jCompose)
+  , ("`", Conjunction jTie)
+  , ("@.", Conjunction agenda)
   ]
 
 jHead x@(Shaped rrs xs)
@@ -207,15 +216,59 @@ jCopy x@(Shaped rrs xs) y@(Shaped sss ys)
     (s:ss) = sss
     (r:rs) = rrs
 
+simpleConjunction c (_, Verb u) (_, Verb v) = Verb $ c u v
+
 jAtop u v@(JMonad mv _, _) =
   ( JMonad mv $ verb1 u . verb1 v
   , JDyad mv mv $ (verb1 u .) .  verb2 v
   )
 
-jCompose u v@(JMonad mv _, _) =
+jCompose (_, Verb u) (_, Verb v@(JMonad mv _, _)) = Verb
   ( JMonad mv $ verb1 u . verb1 v
   , JDyad mv mv (verb2 u `on` verb1 v)
   )
+
+jCompose (_, Noun m) (_, Verb v) = Verb
+  ( JMonad maxBound $ verb2 v m
+  , JDyad 0 maxBound undefined
+  )
+
+jCompose (_, Verb u) (_, Noun n) = Verb
+  ( JMonad maxBound $ flip (verb2 u) n
+  , JDyad 0 maxBound undefined
+  )
+
+jTie (au, Verb _) (av, Verb _) = Noun $ fromList [au, av]
+jTie (au, Verb _) (_, Noun (Shaped [r] xs)) = Noun $ Shaped [r+1] $ V.cons au xs
+jTie (_, Noun (Shaped [r] xs)) (av, Verb _) = Noun $ Shaped [r+1] $ V.snoc xs av
+
+agenda (_, Noun (Shaped rs xs)) (_, Noun (Shaped ss ys))
+  | length rs > 1 || length ss > 1 = error "rank error"
+  | null rs = agenda (undefined, Noun $ Shaped [1] xs) (undefined, Noun $ Shaped ss ys)
+  | null ss = fromGerund $ xs!jumbleToInt (ys!0)
+  | otherwise = error "TODO: agenda trains"
+
+agenda a0@(_, Noun (Shaped rs xs)) (_, Verb v@(JMonad mv _, JDyad lv rv _)) = Verb
+  ( JMonad mv $ \n -> let
+    Verb v1 = agenda a0 (undefined, Noun $ verb1 v n)
+    in verb1 v1 n
+  , JDyad lv rv $ \m n -> let
+    Verb v2 = agenda a0 (undefined, Noun $ verb2 v m n)
+    in verb2 v2 m n )
+
+fromGerund :: Jumble -> Fragment
+fromGerund g
+  | null rs = jFind M.empty $ fromJust $ jGets g
+  | Just s <- jGets t = case jFind M.empty s of
+    Adverb a -> let Verb v = fromGerund $ args!0 in Verb $ a v
+    Conjunction c -> c (undefined, fromGerund $ args!0) (undefined, fromGerund $ args!1)
+  | otherwise = case jumbleToInt $ ys!0 of
+    0 -> Noun $ jOpen $ xs!1
+  where
+    Shaped rs xs = jOpen g
+    t = xs!0
+    Shaped _ ys = jOpen t
+    Shaped _ args = jOpen $ xs!1
 
 jFork u v w =
   ( JMonad maxBound $ verb2 v <$> verb1 u <*> verb1 w
@@ -234,6 +287,7 @@ jFind dict s
   | null s = Edge
   | length ws > 1 = maybe Bad (Noun . fromList) $ mapM readJumble ws
   | Just jum <- readJumble s = Noun $ singleton jum
+  | s `M.member` verbDict = Verb $ verbDict M.! s
   | s `M.member` vocab = vocab M.! s
   | isName s = fromMaybe Bad (M.lookup s dict)
   | otherwise = LParen
@@ -253,16 +307,18 @@ run echo dict xs st
     reduce (x0:makeNoun (verb2 v m n):rest)
   -- 3 Adverb
   | clavn, (Verb v, Adverb a)       <- (f1, f2) =
-    reduce (x0:(jBox $ Shaped [2] $ V.fromList [j2, jBox $ singleton j1], Verb $ a v):x3:rest)
+    reduce (x0:(jBox $ fromList [j2, jBox $ singleton j1], Verb $ a v):x3:rest)
   -- 4 Conjunction
-  | clavn, (Verb u, Conjunction c, Verb v) <- (f1, f2, f3) =
-    reduce (x0:(jBox $ Shaped [2] $ V.fromList [j2, jBox $ Shaped [2] $ V.fromList [j1, j3]], Verb $ c u v):rest)
+  | clavn, (Verb _, Conjunction c, Verb _) <- (f1, f2, f3) = con c
+  | clavn, (Noun _, Conjunction c, Verb _) <- (f1, f2, f3) = con c
+  | clavn, (Verb _, Conjunction c, Noun _) <- (f1, f2, f3) = con c
+  | clavn, (Noun _, Conjunction c, Noun _) <- (f1, f2, f3) = con c
   -- 5 Fork
   | clavn, (Verb u, Verb v, Verb w) <- (f1, f2, f3) =
-    reduce (x0:(jBox $ Shaped [2] $ V.fromList [jBox $ singleton $ intToJumble 3, jBox $ Shaped [3] $ V.fromList [j1, j2, j3]], Verb $ jFork u v w):rest)
+    reduce (x0:(jBox $ fromList [jBox $ singleton $ intToJumble 3, jBox $ fromList [j1, j2, j3]], Verb $ jFork u v w):rest)
   -- 6 Hook
   | cl,    (Verb u, Verb v) <- (f1, f2) =
-    reduce (x0:(jBox $ Shaped [2] $ V.fromList [jBox $ singleton $ intToJumble 2, jBox $ Shaped [2] $ V.fromList [j1, j2]], Verb $ jHook u v):x3:rest)
+    reduce (x0:(jBox $ fromList [jBox $ singleton $ intToJumble 2, jBox $ fromList [j1, j2]], Verb $ jHook u v):x3:rest)
   -- 7 Is
   | Just name <- jGets j0, Copula <- f1, isCAVN f2 =
     run False (M.insert name f2 dict) xs (x2:x3:rest)
@@ -270,15 +326,22 @@ run echo dict xs st
   | LParen <- f0, isCAVN f1, RParen <- f2 = reduce (x1:x3:rest)
   | otherwise = shift
   where
-    makeNoun x = (jBox x, Noun x)
+    con c = reduce (x0:(jBox $ fromList [j2, jBox $ fromList [j1, j3]], c x1 x3):rest)
+    encNoun x = jBox $ fromList [jBox $ singleton $ intToJumble 0, jBox x]
+    makeNoun x = (encNoun x, Noun x)
     (x0:x1:x2:x3:rest) = st
     (j0:j1:j2:j3:_) = fst <$> st
     (f0:f1:f2:f3:_) = snd <$> st
     cl = isCL f0
     clavn = cl || isAVN f0
     reduce              = run True dict xs
-    shift | (h:t) <- xs = run echo dict t $ (jPuts h, jFind dict h):st
-          | otherwise   = (out, dict)
+    shift | null xs     = (out, dict)
+          | otherwise   = run echo dict t $ (enc, frag):st
+          where
+            (h:t) = xs
+            frag  = jFind dict h
+            enc   | Noun n <- frag = encNoun n
+                  | otherwise      = jPuts h
     out   | [_, _]    <- st = Nothing
           | [_, x, _] <- st = if echo then Just $ show $ snd x else Nothing
           | otherwise       = Just $ "syntax error: " ++ show st

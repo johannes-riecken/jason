@@ -28,7 +28,7 @@ jShowInt n
 
 jShowDouble n
   | n < 0        = '_':jShowDouble (-n)
-  | '.' `elem` s = reverse $ dropWhile (`elem` "0.") $ reverse s
+  | '.' `elem` s = reverse $ dropWhile (== '.') $ dropWhile (== '0') $ reverse s
   | otherwise    = s
   where s = printf "%.6g" n
 
@@ -198,7 +198,7 @@ jFloor (Q x) = X (floor x)
 jFloor (D x) = I (floor x)
 jFloor (Z (x, y)) = undefined -- TODO
 
-jImaginary = (Z (0, 1))
+jImaginary = Z (0, 1)
 
 post :: [Int] -> [Shaped Jumble] -> Shaped Jumble
 post frame xs = typeMatch $ homogenize (intToJumble 0) frame xs
