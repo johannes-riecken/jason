@@ -221,13 +221,13 @@ ast dict xs st
   | length st < 4 = shift
   -- 0 Monad
   | ecl, isV j1, isN j2 =
-    reduce (j0:jBox (fromList [j1, jBox $ singleton j2]):j3:rest)
+    reduce (j0:run dict (jBox $ fromList [j1, jBox $ singleton j2]):j3:rest)
   -- 1 Monad
   | eclavn, isV j1, isV j2, isN j3 =
-    reduce (j0:j1:jBox (fromList [j2, jBox $ singleton j3]):rest)
+    reduce (j0:j1:run dict (jBox $ fromList [j2, jBox $ singleton j3]):rest)
   -- 2 Dyad
   | eclavn, isN j1, isV j2, isN j3 =
-    reduce (j0:jBox (fromList [j2, jBox $ fromList [j1, j3]]):rest)
+    reduce (j0:run dict (jBox $ fromList [j2, jBox $ fromList [j1, j3]]):rest)
   -- 3 Adverb
   | eclavn, isV j1, isA j2 =
     reduce (j0:jBox (fromList [j2, jBox $ singleton j1]):j3:rest)
