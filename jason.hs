@@ -1,17 +1,20 @@
-import Control.Monad
 import Jumble
 import Shaped
+import Control.Monad
 import Data.Char
 import Data.Function
 import Data.List
 import qualified Data.Map.Strict as M
 import Data.Maybe
 import qualified Data.Set as S
-import Data.Tree
 import Text.ParserCombinators.Parsec
 import qualified Data.Vector as V
 import Data.Vector ((!))
 import System.IO
+
+type Noun = Shaped Jumble
+data JMonad = JMonad Int (Noun -> Noun)
+data JDyad  = JDyad Int Int (Noun -> Noun -> Noun)
 
 jLine :: Parser [String]
 jLine = (map unwords . groupBy ((. isJNum) . (&&) . isJNum)) -- Join numbers.
@@ -29,10 +32,6 @@ jToken =
   <|> ((++) <$> (many1 (char '_' <|> alphaNum) <|> count 1 anyChar)
   <*> many (oneOf ".:")) -- e.g. "ab_12" or "#" followed by e.g. "..:.:.::.".
     ) >>= (spaces >>) . return -- Eat trailing spaces.
-
-type Noun = Shaped Jumble
-data JMonad = JMonad Int (Noun -> Noun)
-data JDyad  = JDyad Int Int (Noun -> Noun -> Noun)
 
 main = repl M.empty
 
@@ -83,8 +82,12 @@ verbDict = M.fromList
   , ("<", (JMonad maxBound $ \x -> singleton $ jBox x, atomic2 jLT))
   , ("<.", (atomic1 jFloor, atomic2 jMin))
   , (">", (JMonad 0 $ \(Shaped [] x) -> jOpen (x!0), atomic2 jGT))
+  , ("<:", (atomic1 $ jAdd (intToJumble (-1)), atomic2 jLE))
   , (">:", (atomic1 $ jAdd (intToJumble 1), atomic2 jGE))
   , ("=", (undefined, atomic2 jEQ))
+  , ("[", (JMonad maxBound id, JDyad maxBound maxBound const))
+  , ("]", (JMonad maxBound id, JDyad maxBound maxBound $ flip const))
+  , ("$:", (JMonad maxBound $ const $ singleton $ jPuts "|stack error", JDyad maxBound maxBound $ \_ _ -> singleton $ jPuts "|stack error"))
   , ("|", (atomic1 jMag, atomic2 jRes))
   , ("#:", (JMonad maxBound undefined, JDyad 1 0 jAntibase))
   , ("I.", (JMonad 1 jIndices, JDyad maxBound maxBound undefined))
@@ -147,7 +150,7 @@ conjunctionDict = M.fromList
   [ ("&", (undefined, jBondM, jBondN, jCompose))
   , ("@", (undefined, undefined, undefined, jAtop))
   , ("`", (undefined, undefined, undefined, undefined))
-  , ("@.", (agenda, agendaM, undefined, undefined))
+  , ("@.", (undefined, undefined, undefined, undefined))
   ]
 
 jHead x@(Shaped rrs xs)
@@ -280,22 +283,25 @@ run dict j
   | Just i <- jGetI $ xs!0 = case i of
     0 -> j
   | Just "`" <- jGets $ xs!0 = jTie dict (args!0) (args!1)
-  | Just v <- verbOf dict $ xs!0 = case V.length args of
-    1 -> let y = nounOf $ run dict (args!0) in tag 0 $ verb1 v y
+  | Just v <- verbOf dict' $ xs!0 =
+    case V.length args of
+    1 -> let y = nounOf $ run dict' (args!0) in tag 0 $ verb1 v y
     2 -> let
-      x = nounOf $ run dict (args!0)
-      y = nounOf $ run dict (args!1)
+      x = nounOf $ run dict' (args!0)
+      y = nounOf $ run dict' (args!1)
       in tag 0 $ verb2 v x y
-  | otherwise = j
   where
     Shaped rs xs = jOpen j
     Just word = jGets $ xs!0
     Shaped _ args = jOpen $ xs!1
+    -- Assumes verbs are the last case.
+    dict' = M.insertWith (flip const) "$:" (xs!0) dict
 
 verbOf dict j
+  | Just s <- jGets j, s == "$:" = Just $ recur dict $ dict M.! "$:"
   | Just s <- jGets j, Just v <- M.lookup s verbDict = Just v
   | Just s <- jGets $ xs!0, Just a <- M.lookup s adverbDict = let Just v = verbOf dict $ args!0 in Just $ a v
-  | Just s <- jGets $ xs!0, s /= "`", Just c <- M.lookup s conjunctionDict = Just $ runConjunction dict c (args!0) (args!1)
+  | Just s <- jGets $ xs!0, s /= "`", Just c <- M.lookup s conjunctionDict = Just $ if s == "@." then runAgenda dict (args!0) (args!1) else runConjunction dict c (args!0) (args!1)
   | Just i <- jGetI $ xs!0, i == 2 = let
     [Just u, Just v] = verbOf dict <$> V.toList args
     in Just $ jHook u v
@@ -306,6 +312,9 @@ verbOf dict j
   where
     Shaped rs xs = jOpen j
     Shaped _ args = jOpen $ xs!1
+
+recur dict j = let v = fromJust $ verbOf dict j
+  in (JMonad maxBound $ verb1 v, JDyad maxBound maxBound $ verb2 v)
 
 runConjunction dict (nn, nv, vn, vv) j0 j1
   | [Nothing, Nothing] <- verbOf dict <$> [j0, j1] = nn m n
@@ -356,13 +365,22 @@ jTie dict j0 j1
     Shaped [r] xs = nounOf $ run dict j0
     Shaped [s] ys = nounOf $ run dict j1
 
-agenda (Shaped rs xs) (Shaped ss ys)
+runAgenda dict j0 j1
+  | [Nothing, Nothing] <- verbOf dict <$> [j0, j1] = agenda dict m n
+  | [Nothing,  Just v] <- verbOf dict <$> [j0, j1] = agendaM dict m v
+  | [Just u , Nothing] <- verbOf dict <$> [j0, j1] = undefined
+  | [Just u ,  Just v] <- verbOf dict <$> [j0, j1] = undefined
+  where
+    m = nounOf $ run dict j0
+    n = nounOf $ run dict j1
+
+agenda dict (Shaped rs xs) (Shaped ss ys)
   | length rs > 1 || length ss > 1 = error "rank error"
-  | null rs = agenda (Shaped [1] xs) (Shaped ss ys)
-  | null ss = fromJust $ verbOf M.empty $ xs!jumbleToInt (ys!0) -- TODO: Pass dict to verbOf.
+  | null rs = agenda dict (Shaped [1] xs) (Shaped ss ys)
+  | null ss = fromJust $ verbOf dict $ xs!jumbleToInt (ys!0)
   | otherwise = error "TODO: agenda trains"
 
-agendaM m@(Shaped rs xs) v@(JMonad mv _, JDyad lv rv _) =
-  ( JMonad mv $ \n -> verb1 (agenda m $ verb1 v n) n
-  , JDyad lv rv $ \m n -> verb2 (agenda m $ verb2 v m n) m n
+agendaM dict m@(Shaped rs xs) v@(JMonad mv _, JDyad lv rv _) =
+  ( JMonad mv $ \n -> verb1 (agenda dict m $ verb1 v n) n
+  , JDyad lv rv $ \m n -> verb2 (agenda dict m $ verb2 v m n) m n
   )
