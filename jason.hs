@@ -7,14 +7,15 @@ import Data.List
 import qualified Data.Map.Strict as M
 import Data.Maybe
 import qualified Data.Set as S
-import Text.ParserCombinators.Parsec
-import qualified Data.Vector as V
 import Data.Vector ((!))
+import qualified Data.Vector as V
 import System.IO
+import Text.ParserCombinators.Parsec
 
 type Noun = Shaped Jumble
 data JMonad = JMonad Int (Noun -> Noun)
 data JDyad  = JDyad Int Int (Noun -> Noun -> Noun)
+type Dict = M.Map String Jumble
 
 jLine :: Parser [String]
 jLine = (map unwords . groupBy ((. isJNum) . (&&) . isJNum)) -- Join numbers.
@@ -41,20 +42,21 @@ repl dict = do
   done <- isEOF
   unless done $ do
     s <- getLine
-    let
-      (j, dict') = eval dict s
-      Shaped _ xs = jOpen j
-    putStrLn $ case jGetI $ xs!0 of
-      Just 0 -> show $ jOpen $ xs!1
-      Nothing -> show j
+    let (out, dict') = eval dict s
+    unless (isNothing out) $ putStrLn $ fromJust out
     repl dict'
 
+eval :: Dict -> String -> (Maybe String, Dict)
 eval dict s = case parse jLine "" s of
-  Left err -> (jPuts $ "| " ++ show err, dict)
+  Left err -> (Just $ "| " ++ show err, dict)
   Right ws -> let
     xs = "" : reverse ("":filter (not . isPrefixOf "NB.") ws)
-    (Just j, dict') = ast dict xs []
-    in (run dict' j, dict')
+    (mj, dict') = ast dict xs []
+    in (dump <$> mj, dict')
+    
+dump j = let Shaped _ xs = jOpen j in case jGetI $ xs!0 of
+  Just 0  -> show $ jOpen $ xs!1
+  Nothing -> show j
 
 jZero = intToJumble 0
 verb1 (JMonad mu u, _)   = go1 jZero mu u
@@ -219,7 +221,7 @@ jHook u v =
   , JDyad maxBound maxBound $ \x y -> verb2 u x (verb1 v y)
   )
 
-ast :: M.Map String Jumble -> [String] -> [Jumble] -> (Maybe Jumble, M.Map String Jumble)
+ast :: Dict -> [String] -> [Jumble] -> (Maybe Jumble, Dict)
 ast dict xs st
   | length st < 4 = shift
   -- 0 Monad
@@ -277,7 +279,7 @@ ast dict xs st
           | otherwise       = Just $ jPuts $ "|syntax error: " ++ show st
     reduce = ast dict xs
 
-run :: M.Map String Jumble -> Jumble -> Jumble
+run :: Dict -> Jumble -> Jumble
 run dict j
   | null rs = j
   | Just i <- jGetI $ xs!0 = case i of
@@ -294,7 +296,6 @@ run dict j
     Shaped rs xs = jOpen j
     Just word = jGets $ xs!0
     Shaped _ args = jOpen $ xs!1
-    -- Assumes verbs are the last case.
     dict' = M.insertWith (flip const) "$:" (xs!0) dict
 
 verbOf dict j
@@ -332,7 +333,7 @@ nounOf j = let Shaped _ xs = jOpen j in jOpen $ xs!1
 
 isName = all isAlpha
 
-jFind :: M.Map String Jumble -> String -> Jumble
+jFind :: Dict -> String -> Jumble
 jFind dict s
   | null s = jPuts ""
   | length ws > 1 = maybe bad (tag 0 . fromList) $ mapM readJumble ws
