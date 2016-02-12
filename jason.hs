@@ -51,7 +51,7 @@ eval dict s = case parse jLine "" s of
   Left err -> (Just $ "| " ++ show err, dict)
   Right ws -> let
     xs = "" : reverse ("":filter (not . isPrefixOf "NB.") ws)
-    (mj, dict') = ast dict xs []
+    (mj, dict') = ast True dict xs []
     in (dump <$> mj, dict')
     
 dump j = let Shaped _ xs = jOpen j in case jGetI $ xs!0 of
@@ -221,8 +221,8 @@ jHook u v =
   , JDyad maxBound maxBound $ \x y -> verb2 u x (verb1 v y)
   )
 
-ast :: Dict -> [String] -> [Jumble] -> (Maybe Jumble, Dict)
-ast dict xs st
+ast :: Bool -> Dict -> [String] -> [Jumble] -> (Maybe Jumble, Dict)
+ast echo dict xs st
   | length st < 4 = shift
   -- 0 Monad
   | ecl, isV j1, isN j2 =
@@ -247,7 +247,7 @@ ast dict xs st
     reduce (j0:jBox (fromList [jBox $ singleton $ intToJumble 2, jBox $ fromList [j1, j2]]):j3:rest)
   -- 7 Is
   | Just name <- jGets j0, match j1 ["=.", "=:"], isCAVN j2 =
-    ast (M.insert name j2 dict) xs (j2:j3:rest)
+    ast False (M.insert name j2 dict) xs (j2:j3:rest)
   -- 8 Paren
   | match j0 ["("], isCAVN j1, match j2 [")"] = reduce (j1:j3:rest)
   | otherwise = shift
@@ -272,12 +272,13 @@ ast dict xs st
                | otherwise = False
 
     encNoun x = jBox $ fromList [jBox $ singleton $ intToJumble 0, jBox x]
-    shift | (h:t) <- xs = ast dict t $ jFind dict h:st
-          | otherwise     = (out, dict)
-    out   | [_, _]    <- st = Nothing
+    shift | (h:t) <- xs     = ast echo dict t $ jFind dict h:st
+          | otherwise       = (out, dict)
+    out   | not echo        = Nothing
+          | [_, _]    <- st = Nothing
           | [_, x, _] <- st = Just x
           | otherwise       = Just $ jPuts $ "|syntax error: " ++ show st
-    reduce = ast dict xs
+    reduce = ast True dict xs
 
 run :: Dict -> Jumble -> Jumble
 run dict j
@@ -336,14 +337,11 @@ isName = all isAlpha
 jFind :: Dict -> String -> Jumble
 jFind dict s
   | null s = jPuts ""
-  | length ws > 1 = maybe bad (tag 0 . fromList) $ mapM readJumble ws
+  | length ws > 1 = maybe (jPuts "|syntax error") (tag 0 . fromList) $ mapM readJumble ws
   | Just j <- readJumble s = tag 0 $ singleton j
-  | s `M.member` verbDict = jPuts s
   | isName s = fromMaybe (jPuts s) (M.lookup s dict)
   | otherwise = jPuts s
-  where
-    ws = words s
-    bad = jPuts "|syntax error"
+  where ws = words s
 
 jAtop u v@(JMonad mv _, _) =
   (JMonad mv $ verb1 u . verb1 v, JDyad mv mv $ (verb1 u .) . verb2 v)
