@@ -255,24 +255,29 @@ ast echo dict xs st
     (j0:j1:j2:j3:rest) = st
     ecl = match j0 ["", "=.", "=:", "("]
     eclavn = ecl || isA j0 || isV j0 || isN j0
-    isA j | Just s <- jGets j = s `M.member` adverbDict
+    f = sym dict
+    isA j | Just x <- f j = isA x
+          | Just s <- jGets j = s `M.member` adverbDict
           | Shaped [2] xs <- jOpen j, Just i <- jGetI $ xs!0 = i == 4
           | otherwise = False
-    isV j | Just s <- jGets j = s `M.member` verbDict
+    isV j | Just x <- f j = isV x
+          | Just s <- jGets j = s `M.member` verbDict
           | Shaped [2] xs <- jOpen j, Just i <- jGetI $ xs!0 = i == 2 || i == 3
           | Shaped [2] xs <- jOpen j = isA (xs!0) || (isC (xs!0) && Just "`" /= jGets (xs!0))
           | otherwise = False
-    isN j | Shaped [2] xs <- jOpen j, Just i <- jGetI $ xs!0 = i == 0
+    isN j | Just x <- f j = isN x
+          | Shaped [2] xs <- jOpen j, Just i <- jGetI $ xs!0 = i == 0
           | Shaped [2] xs <- jOpen j = isV (xs!0) || Just "`" == jGets (xs!0)
           | otherwise = False
-    isC j | Just s <- jGets j = s `M.member` conjunctionDict
+    isC j | Just x <- f j = isC x
+          | Just s <- jGets j = s `M.member` conjunctionDict
           | otherwise = False
     isCAVN j = isC j || isA j || isV j || isN j
     match j ss | Just s <- jGets j = s `elem` ss
                | otherwise = False
 
     encNoun x = jBox $ fromList [jBox $ singleton $ intToJumble 0, jBox x]
-    shift | (h:t) <- xs     = ast echo dict t $ jFind dict h:st
+    shift | (h:t) <- xs     = ast echo dict t $ atomize h:st
           | otherwise       = (out, dict)
     out   | not echo        = Nothing
           | [_, _]    <- st = Nothing
@@ -280,8 +285,19 @@ ast echo dict xs st
           | otherwise       = Just $ jPuts $ "|syntax error: " ++ show st
     reduce = ast True dict xs
 
+atomize s
+  | null s = jPuts ""
+  | length ws > 1 = maybe (jPuts "|syntax error") (tag 0 . fromList) $ mapM readJumble ws
+  | Just j <- readJumble s = tag 0 $ singleton j
+  | otherwise = jPuts s
+  where ws = words s
+
+sym dict j | Just s <- jGets j, isName s = M.lookup s dict
+           | otherwise = Nothing
+
 run :: Dict -> Jumble -> Jumble
 run dict j
+  | Just x <- sym dict j = x
   | null rs = j
   | Just i <- jGetI $ xs!0 = case i of
     0 -> j
@@ -333,15 +349,6 @@ tag i m = jBox $ fromList [jBox $ singleton $ intToJumble i, jBox m]
 nounOf j = let Shaped _ xs = jOpen j in jOpen $ xs!1
 
 isName = all isAlpha
-
-jFind :: Dict -> String -> Jumble
-jFind dict s
-  | null s = jPuts ""
-  | length ws > 1 = maybe (jPuts "|syntax error") (tag 0 . fromList) $ mapM readJumble ws
-  | Just j <- readJumble s = tag 0 $ singleton j
-  | isName s = fromMaybe (jPuts s) (M.lookup s dict)
-  | otherwise = jPuts s
-  where ws = words s
 
 jAtop u v@(JMonad mv _, _) =
   (JMonad mv $ verb1 u . verb1 v, JDyad mv mv $ (verb1 u .) . verb2 v)
