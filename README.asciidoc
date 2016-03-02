@@ -1,0 +1,8 @@
+= Jason =
+
+Interpreter for a subset of the J language.
+
+There's enough to run the following:
+
+ * http://code.jsoftware.com/wiki/Studio/SimpleExamples[Simple Examples]
+ * http://code.jsoftware.com/wiki/Essays/Unforgettable_Numbers[Unforgettable Numbers]
