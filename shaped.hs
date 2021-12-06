@@ -3,15 +3,23 @@ module Shaped (Shaped(..), fromList, shapeList, singleton, go1, go2, homogenize)
 import Data.List
 import qualified Data.Vector as V
 import Data.Vector (Vector, (!))
+import Safe.Exact
 
 data Shaped a = Shaped [Int] (Vector a) deriving Eq
 
-showK xs shapeX k =
-  case shapeX of
-    []     -> show $ xs!k
-    [n]    -> unwords $ showK xs [] <$> (k +) <$> [0..n-1]
-    (n:ns) -> unlines $ showK xs ns <$> (k +) <$> (product ns *) <$> [0..n-1]
-    
+showK :: Show a => Vector a -> [Int] -> Int -> String
+showK xs shapeX k = head $ keepChunking 0 (reverse shapeX) (V.toList xs)
+
+separator :: Int -> String
+separator 0 = " "
+separator n = replicate n '\n'
+
+keepChunking :: Show a => Int -> [Int] -> [a] -> [String]
+keepChunking level axes ys = snd $ foldl' (\(level, ys) x -> (succ level, intercalate (separator level) <$> chunk x ys)) (level, fmap show ys) axes
+
+chunk :: Int -> [a] -> [[a]]
+chunk = unfoldr . splitAtExactMay
+
 instance Show a => Show (Shaped a) where
   show (Shaped shapeX xs) = showK xs shapeX 0
 
