@@ -12,6 +12,7 @@ import qualified Data.Vector as V
 import System.IO
 import Text.ParserCombinators.Parsec
 import Data.Function.Pointless
+import Safe
 
 type Noun = Shaped Jumble
 data JMonad = JMonad Int (Noun -> Noun)
@@ -22,7 +23,7 @@ jLine :: Parser [String]
 jLine = map unwords . groupBy ((&&) $:: isJNum ~> isJNum ~> id) -- Join numbers.
   <$> (spaces *> many jToken)  -- Eat leading spaces.
 
-isJNum s@(c:_) = (isDigit c || c == '_') && last s `notElem` ".:"
+isJNum s = fromMaybe False $ (&&) <$> (((||) <$> isDigit <*> (== '_')) <$> headMay s) <*> ((`notElem` ".:") <$> lastMay s)
 
 jToken =
     ( (string "NB." >>= (<$> many anyChar) . (++)) -- NB.
