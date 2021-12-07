@@ -11,6 +11,7 @@ import Data.Vector ((!))
 import qualified Data.Vector as V
 import System.IO
 import Text.ParserCombinators.Parsec
+import Data.Function.Pointless
 
 type Noun = Shaped Jumble
 data JMonad = JMonad Int (Noun -> Noun)
@@ -18,8 +19,8 @@ data JDyad  = JDyad Int Int (Noun -> Noun -> Noun)
 type Dict = M.Map String Jumble
 
 jLine :: Parser [String]
-jLine = map unwords . groupBy ((. isJNum) . (&&) . isJNum) -- Join numbers.
-  <$> (spaces >> many jToken)  -- Eat leading spaces.
+jLine = map unwords . groupBy ((&&) $:: isJNum ~> isJNum ~> id) -- Join numbers.
+  <$> (spaces *> many jToken)  -- Eat leading spaces.
 
 isJNum s@(c:_) = (isDigit c || c == '_') && last s `notElem` ".:"
 
