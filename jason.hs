@@ -18,7 +18,7 @@ data JDyad  = JDyad Int Int (Noun -> Noun -> Noun)
 type Dict = M.Map String Jumble
 
 jLine :: Parser [String]
-jLine = (map unwords . groupBy ((. isJNum) . (&&) . isJNum)) -- Join numbers.
+jLine = map unwords . groupBy ((. isJNum) . (&&) . isJNum) -- Join numbers.
   <$> (spaces >> many jToken)  -- Eat leading spaces.
 
 isJNum s@(c:_) = (isDigit c || c == '_') && last s `notElem` ".:"
@@ -53,7 +53,7 @@ eval dict s = case parse jLine "" s of
     xs = "" : reverse ("":filter (not . isPrefixOf "NB.") ws)
     (mj, dict') = ast True dict xs []
     in (dump <$> mj, dict')
-    
+
 dump j = let Shaped _ xs = jOpen j in case jGetI $ xs!0 of
   Just 0  -> show $ jOpen $ xs!1
   Nothing -> show j
@@ -88,7 +88,7 @@ verbDict = M.fromList
   , (">:", (atomic1 $ jAdd (intToJumble 1), atomic2 jGE))
   , ("=", (undefined, atomic2 jEQ))
   , ("[", (JMonad maxBound id, JDyad maxBound maxBound const))
-  , ("]", (JMonad maxBound id, JDyad maxBound maxBound $ flip const))
+  , ("]", (JMonad maxBound id, JDyad maxBound maxBound $ \ _ x -> x))
   , ("$:", (JMonad maxBound $ const $ singleton $ jPuts "|stack error", JDyad maxBound maxBound $ \_ _ -> singleton $ jPuts "|stack error"))
   , ("|", (atomic1 jMag, atomic2 jRes))
   , ("#:", (JMonad maxBound undefined, JDyad 1 0 jAntibase))
@@ -132,13 +132,14 @@ adverbDict = M.fromList
   [ ("/", \v@(_, JDyad lu ru op) ->
     ( JMonad maxBound $ \x@(Shaped rs xs) -> case rs of
       [] -> x
-      (r:rest) -> foldl1' (verb2 v) [Shaped rest $ V.slice (i*sz) sz xs | i <- [0..r-1], let sz = product rest]
+      (r:rest) -> foldl1' (verb2 v) [Shaped rest $ V.slice (i * sz) sz xs |
+         let sz = product rest, i <- [0 .. r - 1]]
       , JDyad lu maxBound $ go2 jZero lu ru op
       ))
   , ("\\", \v ->
     ( JMonad maxBound $ \x@(Shaped rs xs) -> case rs of
       [] -> x
-      (r:rest) -> post [r] $ map (verb1 v) $ zipWith (\i xs -> Shaped (i:rest) xs) [1..r] [V.slice 0 (i*sz) xs | i <- [1..r], let sz = product rest]
+      (r:rest) -> post [r] $ map (verb1 v) $ zipWith (\i xs -> Shaped (i:rest) xs) [1..r] [V.slice 0 (i * sz) xs | let sz = product rest, i <- [1 .. r]]
       , undefined
       ))
   , ("/.", \v -> (undefined, JDyad maxBound maxBound $ jKey v))
@@ -313,7 +314,7 @@ run dict j
     Shaped rs xs = jOpen j
     Just word = jGets $ xs!0
     Shaped _ args = jOpen $ xs!1
-    dict' = M.insertWith (flip const) "$:" (xs!0) dict
+    dict' = M.insertWith (\ _ x -> x) "$:" (xs!0) dict
 
 verbOf dict j
   | Just s <- jGets j, s == "$:" = Just $ recur dict $ dict M.! "$:"
