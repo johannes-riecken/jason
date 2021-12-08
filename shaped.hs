@@ -4,18 +4,28 @@ import Data.List
 import qualified Data.Vector as V
 import Data.Vector (Vector, (!))
 import Safe.Exact
+import Text.Printf
 
 data Shaped a = Shaped [Int] (Vector a) deriving Eq
 
 showK :: Show a => Vector a -> [Int] -> Int -> String
-showK xs shapeX k = head $ keepChunking 0 (reverse shapeX) (V.toList xs)
+showK xs shapeX k = intercalate "\n" . format . lines . head $ keepChunking 0 (reverse shapeX) (V.toList xs)
+
+format :: [String] -> [String]
+format xs = map unwords ann where
+    ann = map (zipWith (printf "%*s") maxLengths) xs'
+    maxLengths = map maximum $ transpose ys
+    xs' = map words xs
+    ys = map (map length) xs'
 
 separator :: Int -> String
 separator 0 = " "
 separator n = replicate n '\n'
 
 keepChunking :: Show a => Int -> [Int] -> [a] -> [String]
-keepChunking level axes ys = snd $ foldl' (\(level, ys) x -> (succ level, intercalate (separator level) <$> chunk x ys)) (level, fmap show ys) axes
+keepChunking level axes ys = snd $ foldl'
+    (\(level, ys) x -> (succ level, intercalate (separator level) <$> chunk x ys))
+    (level, fmap show ys) axes
 
 chunk :: Int -> [a] -> [[a]]
 chunk = unfoldr . splitAtExactMay

@@ -39,7 +39,6 @@ jToken =
 main = repl M.empty
 
 repl dict = do
-  putStr "   "
   hFlush stdout
   done <- isEOF
   unless done $ do
