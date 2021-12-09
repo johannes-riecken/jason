@@ -65,11 +65,11 @@ verb2 (_, JDyad lu ru u) = go2 jZero lu ru u
 
 -- Shortcut for J monads of rank 0 that output atoms.
 atomic1 f = JMonad 0  $ \(Shaped [] xs)
-  -> singleton $ f (xs!0)
+  -> pure $ f (xs!0)
 
 -- Shortcut for J dyads of rank 0 0 that output atoms.
 atomic2 f = JDyad 0 0 $ \(Shaped [] xs) (Shaped [] ys)
-  -> singleton $ f (xs!0) (ys!0)
+  -> pure $ f (xs!0) (ys!0)
 
 verbDict = M.fromList
   [ ("+:", (atomic1 $ join jAdd, undefined))
@@ -82,7 +82,7 @@ verbDict = M.fromList
   , ("^", (atomic1 jExp, atomic2 jPow))
   , ("^.", (atomic1 jLog, undefined))
   , ("%:", (atomic1 jSqrt, undefined))
-  , ("<", (JMonad maxBound $ \x -> singleton $ jBox x, atomic2 jLT))
+  , ("<", (JMonad maxBound $ \x -> pure $ jBox x, atomic2 jLT))
   , ("<.", (atomic1 jFloor, atomic2 jMin))
   , (">", (JMonad 0 $ \(Shaped [] x) -> jOpen (x!0), atomic2 jGT))
   , ("<:", (atomic1 $ jAdd (intToJumble (-1)), atomic2 jLE))
@@ -90,14 +90,14 @@ verbDict = M.fromList
   , ("=", (undefined, atomic2 jEQ))
   , ("[", (JMonad maxBound id, JDyad maxBound maxBound const))
   , ("]", (JMonad maxBound id, JDyad maxBound maxBound $ \ _ x -> x))
-  , ("$:", (JMonad maxBound $ const $ singleton $ jPuts "|stack error", JDyad maxBound maxBound $ \_ _ -> singleton $ jPuts "|stack error"))
+  , ("$:", (JMonad maxBound $ const $ pure $ jPuts "|stack error", JDyad maxBound maxBound $ \_ _ -> pure $ jPuts "|stack error"))
   , ("|", (atomic1 jMag, atomic2 jRes))
   , ("#:", (JMonad maxBound undefined, JDyad 1 0 jAntibase))
   , ("I.", (JMonad 1 jIndices, JDyad maxBound maxBound undefined))
   , ("/:", (undefined, JDyad maxBound maxBound jSortUp))
   , ("{.", (JMonad maxBound jHead, undefined))
-  , ("1:", (JMonad maxBound $ const $ singleton $ intToJumble 1,
-            JDyad maxBound maxBound $ \_ _ -> singleton $ intToJumble 1))
+  , ("1:", (JMonad maxBound $ const $ pure $ intToJumble 1,
+            JDyad maxBound maxBound $ \_ _ -> pure $ intToJumble 1))
   , (",",
       ( JMonad maxBound $ \(Shaped rs xs) -> Shaped [product rs] xs
       , undefined
@@ -107,7 +107,7 @@ verbDict = M.fromList
       , JDyad maxBound maxBound $ \x y -> post [2] [x, y]
       ))
   , ("#",
-      ( JMonad maxBound $ \(Shaped rs _) -> singleton $ intToJumble $ head rs
+      ( JMonad maxBound $ \(Shaped rs _) -> pure $ intToJumble $ head rs
       , JDyad 1 maxBound jCopy
       ))
   , ("i.",
@@ -228,25 +228,25 @@ ast echo dict xs st
   | length st < 4 = shift
   -- 0 Monad
   | ecl, isV j1, isN j2 =
-    reduce (j0:run dict (jBox $ fromList [j1, jBox $ singleton j2]):j3:rest)
+    reduce (j0:run dict (jBox $ fromList [j1, jBox $ pure j2]):j3:rest)
   -- 1 Monad
   | eclavn, isV j1, isV j2, isN j3 =
-    reduce (j0:j1:run dict (jBox $ fromList [j2, jBox $ singleton j3]):rest)
+    reduce (j0:j1:run dict (jBox $ fromList [j2, jBox $ pure j3]):rest)
   -- 2 Dyad
   | eclavn, isN j1, isV j2, isN j3 =
     reduce (j0:run dict (jBox $ fromList [j2, jBox $ fromList [j1, j3]]):rest)
   -- 3 Adverb
   | eclavn, isV j1, isA j2 =
-    reduce (j0:jBox (fromList [j2, jBox $ singleton j1]):j3:rest)
+    reduce (j0:jBox (fromList [j2, jBox $ pure j1]):j3:rest)
   -- 4 Conjunction
   | eclavn, isV j1 || isN j1, isC j2, isV j3 || isN j3 =
     reduce (j0:jBox (fromList [j2, jBox $ fromList [j1, j3]]):rest)
   -- 5 Fork
   | eclavn, isV j1, isV j2, isV j3 =
-    reduce (j0:jBox (fromList [jBox $ singleton $ intToJumble 3, jBox $ fromList [j1, j2, j3]]):rest)
+    reduce (j0:jBox (fromList [jBox $ pure $ intToJumble 3, jBox $ fromList [j1, j2, j3]]):rest)
   -- 6 Hook
   | ecl, isV j1, isV j2 =
-    reduce (j0:jBox (fromList [jBox $ singleton $ intToJumble 2, jBox $ fromList [j1, j2]]):j3:rest)
+    reduce (j0:jBox (fromList [jBox $ pure $ intToJumble 2, jBox $ fromList [j1, j2]]):j3:rest)
   -- 7 Is
   | Just name <- jGets j0, match j1 ["=.", "=:"], isCAVN j2 =
     ast False (M.insert name j2 dict) xs (j2:j3:rest)
@@ -278,7 +278,7 @@ ast echo dict xs st
     match j ss | Just s <- jGets j = s `elem` ss
                | otherwise = False
 
-    encNoun x = jBox $ fromList [jBox $ singleton $ intToJumble 0, jBox x]
+    encNoun x = jBox $ fromList [jBox $ pure $ intToJumble 0, jBox x]
     shift | (h:t) <- xs     = ast echo dict t $ atomize h:st
           | otherwise       = (out, dict)
     out   | not echo        = Nothing
@@ -290,7 +290,7 @@ ast echo dict xs st
 atomize s
   | null s = jPuts ""
   | length ws > 1 = maybe (jPuts "|syntax error") (tag 0 . fromList) $ mapM readJumble ws
-  | Just j <- readJumble s = tag 0 $ singleton j
+  | Just j <- readJumble s = tag 0 $ pure j
   | otherwise = jPuts s
   where ws = words s
 
@@ -346,7 +346,7 @@ runConjunction dict (nn, nv, vn, vv) j0 j1
     n = nounOf $ run dict j1
 
 tag :: Integral a => a  -> Noun -> Jumble
-tag i m = jBox $ fromList [jBox $ singleton $ intToJumble i, jBox m]
+tag i m = jBox $ fromList [jBox $ pure $ intToJumble i, jBox m]
 
 nounOf j = let Shaped _ xs = jOpen j in jOpen $ xs!1
 

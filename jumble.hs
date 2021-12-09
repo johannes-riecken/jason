@@ -69,7 +69,7 @@ jGetI (Box (Shaped [] xs))
   | otherwise = Nothing
 jGetI _ = Nothing
 
-jPuts s = jBox $ singleton $ S s
+jPuts s = jBox $ pure $ S s
 
 jumbleToInt :: Jumble -> Int
 jumbleToInt (I x) = fromIntegral x
@@ -103,7 +103,7 @@ pro x y = pro y x
 
 jBox = Box
 jOpen (Box x) = x
-jOpen x = singleton x
+jOpen x = pure x
 
 maxint = 2^63 - 1
 minint = -2^63

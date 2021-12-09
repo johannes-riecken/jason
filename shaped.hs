@@ -1,12 +1,17 @@
-module Shaped (Shaped(..), fromList, shapeList, singleton, go1, go2, homogenize) where
+{-# LANGUAGE DeriveGeneric, DerivingVia #-}
+module Shaped (Shaped(..), fromList, shapeList, go1, go2, homogenize) where
 
 import Data.List
 import qualified Data.Vector as V
 import Data.Vector (Vector, (!))
 import Safe.Exact
 import Text.Printf
+import GHC.Generics
+import Generic.Data
 
-data Shaped a = Shaped [Int] (Vector a) deriving Eq
+data Shaped a = Shaped [Int] (Vector a)
+    deriving (Eq, Generic1)
+    deriving (Functor, Applicative) via Generically1 Shaped
 
 showK :: Show a => Vector a -> [Int] -> Int -> String
 showK xs shapeX k = intercalate "\n" . format . lines . head $ keepChunking 0 (reverse shapeX) (V.toList xs)
@@ -32,9 +37,6 @@ chunk = unfoldr . splitAtExactMay
 
 instance Show a => Show (Shaped a) where
   show (Shaped shapeX xs) = showK xs shapeX 0
-
-singleton :: a -> Shaped a
-singleton x = Shaped [] (V.singleton x)
 
 fromList :: [a] -> Shaped a
 fromList xs = Shaped [length xs] (V.fromList xs)
@@ -89,10 +91,10 @@ go2 z lv rv v (Shaped shapeX xs) (Shaped shapeY ys)
         m = div (V.length ys * xsize) (V.length xs * ysize)
 
 test1 :: (a -> a) -> Shaped a -> Shaped a
-test1 f (Shaped [] xs) = singleton (f $ xs!0)
+test1 f (Shaped [] xs) = pure (f $ xs!0)
 
 test2 :: (a -> a -> a) -> Shaped a -> Shaped a -> Shaped a
-test2 f (Shaped [] xs) (Shaped [] ys) = singleton (f (xs!0) (ys!0))
+test2 f (Shaped [] xs) (Shaped [] ys) = pure (f (xs!0) (ys!0))
 
 {-
 --hDyad :: (Int -> Int -> Int) -> Noun -> Noun -> Noun
