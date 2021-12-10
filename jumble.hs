@@ -11,7 +11,7 @@ import Data.Char
 import Data.Ord
 import Data.Ratio
 import Text.Printf
-import qualified Data.Vector as V
+import qualified Data.List as V
 
 -- TODO: Infinity.
 data Jumble = I Integer
@@ -60,12 +60,12 @@ intToJumble :: Integral a => a -> Jumble
 intToJumble = checkOverflow . fromIntegral
 
 jGets (Box (Shaped [] xs))
-  | S s <- xs V.! 0 = Just s
+  | S s <- xs V.!! 0 = Just s
   | otherwise = Nothing
 jGets _ = Nothing
 
 jGetI (Box (Shaped [] xs))
-  | I x <- xs V.! 0 = Just x
+  | I x <- xs V.!! 0 = Just x
   | otherwise = Nothing
 jGetI _ = Nothing
 
