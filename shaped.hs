@@ -1,5 +1,5 @@
 {-# LANGUAGE DeriveGeneric, DerivingVia #-}
-module Shaped (Shaped(..), fromList, shapeList, go1, go2, homogenize) where
+module Shaped (Shaped(..), fromList, shapeList, go1, go2, homogenize, keepChunking) where
 
 import Data.List
 import qualified Data.Vector as V
@@ -8,13 +8,14 @@ import Safe.Exact
 import Text.Printf
 import GHC.Generics
 import Generic.Data
+import Safe
 
 data Shaped a = Shaped [Int] (Vector a)
     deriving (Eq, Generic1)
     deriving (Functor, Applicative) via Generically1 Shaped
 
-showK :: Show a => Vector a -> [Int] -> Int -> String
-showK xs shapeX k = intercalate "\n" . format . lines . head $ keepChunking 0 (reverse shapeX) (V.toList xs)
+showK :: Show a => Vector a -> [Int] -> String
+showK xs shapeX = intercalate "\n" . format . lines . headDef "" $ keepChunking (reverse shapeX) (V.toList xs)
 
 format :: [String] -> [String]
 format xs = map unwords ann where
@@ -27,16 +28,17 @@ separator :: Int -> String
 separator 0 = " "
 separator n = replicate n '\n'
 
-keepChunking :: Show a => Int -> [Int] -> [a] -> [String]
-keepChunking level axes ys = snd $ foldl'
+-- keepChunking
+keepChunking :: Show a => [Int] -> [a] -> [String]
+keepChunking axes ys = snd $ foldl'
     (\(level, ys) x -> (succ level, intercalate (separator level) <$> chunk x ys))
-    (level, fmap show ys) axes
+    (0, fmap show ys) axes
 
 chunk :: Int -> [a] -> [[a]]
 chunk = unfoldr . splitAtExactMay
 
 instance Show a => Show (Shaped a) where
-  show (Shaped shapeX xs) = showK xs shapeX 0
+  show (Shaped shapeX xs) = showK xs shapeX
 
 fromList :: [a] -> Shaped a
 fromList xs = Shaped [length xs] (V.fromList xs)
@@ -48,7 +50,7 @@ shapeList shape xs =
 fill :: a -> [Int] -> Shaped a -> Vector a
 fill z newRank (Shaped rank vs)
   | newRank == rank = vs
-  | otherwise       = V.replicate (product newRank) z V.// 
+  | otherwise       = V.replicate (product newRank) z V.//
     zip (sum . zipWith (*) (scanl1 (*) (1:reverse newRank)) . reverse <$>
     sequence (flip take [0..] <$> rank)) (V.toList vs)
 
