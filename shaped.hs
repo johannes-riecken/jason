@@ -20,9 +20,6 @@ data Shaped a = Shaped [Int] [a]
     deriving (Eq, Generic1)
     deriving (Functor, Applicative) via Generically1 Shaped
 
-showK :: Show a => [a] -> [Int] -> String
-showK xs shapeX = intercalate "\n" . format . lines . headDef "" $ keepChunking (Shaped (reverse shapeX) xs)
-
 format :: [String] -> [String]
 format xs = map unwords ann where
     ann = map (zipWith (printf "%*s") maxLengths) xs'
@@ -44,7 +41,7 @@ chunk :: Int -> [a] -> [[a]]
 chunk = unfoldr . splitAtExactMay
 
 instance Show a => Show (Shaped a) where
-  show (Shaped shapeX xs) = showK xs shapeX
+  show (Shaped shapeX xs) = intercalate "\n" . format . lines . headDef "" $ keepChunking (Shaped (reverse shapeX) xs)
 
 fromList :: [a] -> Shaped a
 fromList xs = Shaped [length xs] xs
