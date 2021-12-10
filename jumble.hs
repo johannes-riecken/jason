@@ -60,12 +60,12 @@ intToJumble :: Integral a => a -> Jumble
 intToJumble = checkOverflow . fromIntegral
 
 jGets (Box (Shaped [] xs))
-  | S s <- xs V.!! 0 = Just s
+  | S s <- head xs = Just s
   | otherwise = Nothing
 jGets _ = Nothing
 
 jGetI (Box (Shaped [] xs))
-  | I x <- xs V.!! 0 = Just x
+  | I x <- head xs = Just x
   | otherwise = Nothing
 jGetI _ = Nothing
 

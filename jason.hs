@@ -55,7 +55,7 @@ eval dict s = case parse jLine "" s of
     (mj, dict') = ast True dict xs []
     in (dump <$> mj, dict')
 
-dump j = let Shaped _ xs = jOpen j in case jGetI $ xs!!0 of
+dump j = let Shaped _ xs = jOpen j in case jGetI $ head xs of
   Just 0  -> show $ jOpen $ xs!!1
   Nothing -> show j
 
@@ -65,11 +65,11 @@ verb2 (_, JDyad lu ru u) = go2 jZero lu ru u
 
 -- Shortcut for J monads of rank 0 that output atoms.
 atomic1 f = JMonad 0  $ \(Shaped [] xs)
-  -> pure $ f (xs!!0)
+  -> pure $ f (head xs)
 
 -- Shortcut for J dyads of rank 0 0 that output atoms.
 atomic2 f = JDyad 0 0 $ \(Shaped [] xs) (Shaped [] ys)
-  -> pure $ f (xs!!0) (ys!!0)
+  -> pure $ f (head xs) (head ys)
 
 verbDict = M.fromList
   [ ("+:", (atomic1 $ join jAdd, undefined))
@@ -84,7 +84,7 @@ verbDict = M.fromList
   , ("%:", (atomic1 jSqrt, undefined))
   , ("<", (JMonad maxBound $ \x -> pure $ jBox x, atomic2 jLT))
   , ("<.", (atomic1 jFloor, atomic2 jMin))
-  , (">", (JMonad 0 $ \(Shaped [] x) -> jOpen (x!!0), atomic2 jGT))
+  , (">", (JMonad 0 $ \(Shaped [] x) -> jOpen (head x), atomic2 jGT))
   , ("<:", (atomic1 $ jAdd (intToJumble (-1)), atomic2 jLE))
   , (">:", (atomic1 $ jAdd (intToJumble 1), atomic2 jGE))
   , ("=", (undefined, atomic2 jEQ))
@@ -166,7 +166,7 @@ jHead x@(Shaped rrs xs)
     sz = product rs
 
 jKey v x y = let ((_, p), (_:ss, q)) = listsFrom x y
-  in post [length $ nubFast p] $ map (\ks -> verb1 v $ Shaped (length ks:ss) $ V.concat $ map (q!!) ks) $ (`elemIndices` p) <$> nubFast p
+  in post [length $ nubFast p] $ map (\ks -> verb1 v $ Shaped (length ks:ss) $ concatMap (q!!) ks) $ (`elemIndices` p) <$> nubFast p
 
 nubFast xs = reverse $ f [] xs S.empty
   where
@@ -194,7 +194,7 @@ jIndices x@(Shaped rs xs) = let
 jAntibase :: Noun -> Noun -> Noun
 jAntibase (Shaped rs xs) y@(Shaped [] ys) = Shaped [V.length v] v
   where
-    v =  intToJumble <$> f [] ms (jumbleToInt $ ys!!0)
+    v =  intToJumble <$> f [] ms (jumbleToInt $ head ys)
     ms = reverse $ jumbleToInt <$>  xs
     f acc [] _ = acc
     f acc (m:ms) n = let (q, r) = divMod n m
@@ -202,8 +202,8 @@ jAntibase (Shaped rs xs) y@(Shaped [] ys) = Shaped [V.length v] v
 
 jCopy x@(Shaped rrs xs) y@(Shaped sss ys)
   | null rrs && null sss = jCopy (Shaped [1] xs) (Shaped [1] ys)
-  | null rrs = let k = jumbleToInt (xs!!0) in Shaped (s * k:ss) $ V.concat $ replicate k ys
-  | null sss = let k = V.sum $ jumbleToInt <$> xs in Shaped [k] $ V.replicate k $ ys!!0
+  | null rrs = let k = jumbleToInt (head xs) in Shaped (s * k:ss) $ V.concat $ replicate k ys
+  | null sss = let k = V.sum $ jumbleToInt <$> xs in Shaped [k] $ V.replicate k $ head ys
   | r /= s = error "length error"
   | otherwise = let
     k = V.sum $ jumbleToInt <$> xs
@@ -260,16 +260,16 @@ ast echo dict xs st
     f = sym dict
     isA j | Just x <- f j = isA x
           | Just s <- jGets j = s `M.member` adverbDict
-          | Shaped [2] xs <- jOpen j, Just i <- jGetI $ xs!!0 = i == 4
+          | Shaped [2] xs <- jOpen j, Just i <- jGetI $ head xs = i == 4
           | otherwise = False
     isV j | Just x <- f j = isV x
           | Just s <- jGets j = s `M.member` verbDict
-          | Shaped [2] xs <- jOpen j, Just i <- jGetI $ xs!!0 = i == 2 || i == 3
-          | Shaped [2] xs <- jOpen j = isA (xs!!0) || (isC (xs!!0) && Just "`" /= jGets (xs!!0))
+          | Shaped [2] xs <- jOpen j, Just i <- jGetI $ head xs = i == 2 || i == 3
+          | Shaped [2] xs <- jOpen j = isA (head xs) || (isC (head xs) && Just "`" /= jGets (head xs))
           | otherwise = False
     isN j | Just x <- f j = isN x
-          | Shaped [2] xs <- jOpen j, Just i <- jGetI $ xs!!0 = i == 0
-          | Shaped [2] xs <- jOpen j = isV (xs!!0) || Just "`" == jGets (xs!!0)
+          | Shaped [2] xs <- jOpen j, Just i <- jGetI $ head xs = i == 0
+          | Shaped [2] xs <- jOpen j = isV (head xs) || Just "`" == jGets (head xs)
           | otherwise = False
     isC j | Just x <- f j = isC x
           | Just s <- jGets j = s `M.member` conjunctionDict
@@ -301,33 +301,33 @@ run :: Dict -> Jumble -> Jumble
 run dict j
   | Just x <- sym dict j = x
   | null rs = j
-  | Just i <- jGetI $ xs!!0 = case i of
-    0 -> j
-  | Just "`" <- jGets $ xs!!0 = jTie dict (args!!0) (args!!1)
-  | Just v <- verbOf dict' $ xs!!0 =
+  | Just i <- jGetI $ head xs = case i of
+      0 -> j
+  | Just "`" <- jGets $ head xs = jTie dict (head args) (args!!1)
+  | Just v <- verbOf dict' $ head xs =
     case V.length args of
-    1 -> let y = nounOf $ run dict' (args!!0) in tag 0 $ verb1 v y
+    1 -> let y = nounOf $ run dict' (head args) in tag 0 $ verb1 v y
     2 -> let
-      x = nounOf $ run dict' (args!!0)
+      x = nounOf $ run dict' (head args)
       y = nounOf $ run dict' (args!!1)
       in tag 0 $ verb2 v x y
   where
     Shaped rs xs = jOpen j
-    Just word = jGets $ xs!!0
+    Just word = jGets $ head xs
     Shaped _ args = jOpen $ xs!!1
-    dict' = M.insertWith (\ _ x -> x) "$:" (xs!!0) dict
+    dict' = M.insertWith (\ _ x -> x) "$:" (head xs) dict
 
 verbOf dict j
   | Just s <- jGets j, s == "$:" = Just $ recur dict $ dict M.! "$:"
   | Just s <- jGets j, Just v <- M.lookup s verbDict = Just v
-  | Just s <- jGets $ xs!!0, Just a <- M.lookup s adverbDict = let Just v = verbOf dict $ args!!0 in Just $ a v
-  | Just s <- jGets $ xs!!0, s /= "`", Just c <- M.lookup s conjunctionDict = Just $ if s == "@." then runAgenda dict (args!!0) (args!!1) else runConjunction dict c (args!!0) (args!!1)
-  | Just i <- jGetI $ xs!!0, i == 2 = let
-    [Just u, Just v] = verbOf dict <$>  args
-    in Just $ jHook u v
-  | Just i <- jGetI $ xs!!0, i == 3 = let
-    [Just u, Just v, Just w] = verbOf dict <$>  args
-    in Just $ jFork u v w
+  | Just s <- jGets $ head xs, Just a <- M.lookup s adverbDict = let Just v = verbOf dict $ head args in Just $ a v
+  | Just s <- jGets $ head xs, s /= "`", Just c <- M.lookup s conjunctionDict = Just $ if s == "@." then runAgenda dict (head args) (args!!1) else runConjunction dict c (head args) (args!!1)
+  | Just i <- jGetI $ head xs, i == 2 = let
+      [Just u, Just v] = verbOf dict <$>  args
+      in Just $ jHook u v
+  | Just i <- jGetI $ head xs, i == 3 = let
+      [Just u, Just v, Just w] = verbOf dict <$>  args
+      in Just $ jFork u v w
   | otherwise = Nothing
   where
     Shaped rs xs = jOpen j
@@ -385,7 +385,7 @@ runAgenda dict j0 j1
 agenda dict (Shaped rs xs) (Shaped ss ys)
   | length rs > 1 || length ss > 1 = error "rank error"
   | null rs = agenda dict (Shaped [1] xs) (Shaped ss ys)
-  | null ss = fromJust $ verbOf dict $ xs!!jumbleToInt (ys!!0)
+  | null ss = fromJust $ verbOf dict $ xs!!jumbleToInt (head ys)
   | otherwise = error "TODO: agenda trains"
 
 agendaM dict m@(Shaped rs xs) v@(JMonad mv _, JDyad lv rv _) =

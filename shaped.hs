@@ -16,12 +16,12 @@ import Safe
 slice :: Int -> Int -> [a] -> [a]
 slice i n = take n . drop i
 
-data Shaped a = Shaped [Int] ([a])
+data Shaped a = Shaped [Int] [a]
     deriving (Eq, Generic1)
     deriving (Functor, Applicative) via Generically1 Shaped
 
 showK :: Show a => [a] -> [Int] -> String
-showK xs shapeX = intercalate "\n" . format . lines . headDef "" $ keepChunking (Shaped (reverse shapeX) (xs))
+showK xs shapeX = intercalate "\n" . format . lines . headDef "" $ keepChunking (Shaped (reverse shapeX) xs)
 
 format :: [String] -> [String]
 format xs = map unwords ann where
@@ -47,7 +47,7 @@ instance Show a => Show (Shaped a) where
   show (Shaped shapeX xs) = showK xs shapeX
 
 fromList :: [a] -> Shaped a
-fromList xs = Shaped [length xs] (xs)
+fromList xs = Shaped [length xs] xs
 
 shapeList :: [Int] -> [a] -> Shaped a
 shapeList shape xs =
@@ -58,7 +58,7 @@ fill z newRank (Shaped rank vs)
   | newRank == rank = vs
   | otherwise       = V.replicate (product newRank) z //
     zip (sum . zipWith (*) (scanl1 (*) (1:reverse newRank)) . reverse <$>
-    sequence (flip take [0..] <$> rank)) (vs)
+    sequence (flip take [0..] <$> rank)) vs
 
 homogenize :: a -> [Int] -> [Shaped a] -> Shaped a
 homogenize z frame xs = let
@@ -99,10 +99,10 @@ go2 z lv rv v (Shaped shapeX xs) (Shaped shapeY ys)
         m = div (V.length ys * xsize) (V.length xs * ysize)
 
 test1 :: (a -> a) -> Shaped a -> Shaped a
-test1 f (Shaped [] xs) = pure (f $ xs!!0)
+test1 f (Shaped [] xs) = pure (f $ head xs)
 
 test2 :: (a -> a -> a) -> Shaped a -> Shaped a -> Shaped a
-test2 f (Shaped [] xs) (Shaped [] ys) = pure (f (xs!!0) (ys!!0))
+test2 f (Shaped [] xs) (Shaped [] ys) = pure (f (head xs) (head ys))
 
 {-
 --hDyad :: (Int -> Int -> Int) -> Noun -> Noun -> Noun
