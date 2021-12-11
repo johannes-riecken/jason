@@ -9,7 +9,9 @@ import Text.Printf
 import GHC.Generics
 import Generic.Data
 import Safe
+import Test.QuickCheck
 
+-- TODO: not total
 (//) :: [a] -> [(Int, a)] -> [a]
 (//) xs updates = VV.toList $ (VV.//) (VV.fromList xs) updates
 
@@ -20,6 +22,10 @@ data Shaped a = Shaped [Int] [a]
     deriving (Eq, Generic1)
     deriving (Functor, Applicative) via Generically1 Shaped
 
+instance Arbitrary a => Arbitrary (Shaped a) where
+    arbitrary = Shaped <$> arbitrary <*> arbitrary
+
+-- format ensures column alignment
 format :: [String] -> [String]
 format xs = map unwords ann where
     ann = map (zipWith (printf "%*s") maxLengths) xs'
@@ -31,39 +37,59 @@ separator :: Int -> String
 separator 0 = " "
 separator n = replicate n '\n'
 
--- keepChunking
+-- keepChunking creates a list containing at most a string with chunks the size
+-- of the axes in order joined with that level's separator
 keepChunking :: Show a => Shaped a -> [String]
 keepChunking (Shaped axes ys) = snd $ foldl'
     (\(level, ys) x -> (succ level, intercalate (separator level) <$> chunk x ys))
     (0, fmap show ys) axes
 
+-- chunk splits a list into chunks of size n, discarding partial chunks at the
+-- end
+-- TODO: Doesn't terminate if n is 0
 chunk :: Int -> [a] -> [[a]]
 chunk = unfoldr . splitAtExactMay
 
 instance Show a => Show (Shaped a) where
   show (Shaped shapeX xs) = intercalate "\n" . format . lines . headDef "" $ keepChunking (Shaped (reverse shapeX) xs)
 
+-- converts a Haskell list to a J 1-cell
 fromList :: [a] -> Shaped a
 fromList xs = Shaped [length xs] xs
 
+-- repeats a Haskell list to fill the given shape
+-- TODO: fails with empty list, maybe replace with non-empty list
 shapeList :: [Int] -> [a] -> Shaped a
 shapeList shape xs =
   Shaped shape (take (product shape) (cycle xs))
 
+-- fill pads with zero values to match the new shape
+-- example:
+-- 1 2
+-- 3 4
+-- padded to [3,3] with zero-value 7 becomes
+-- 1 2 7
+-- 3 4 7
+-- 7 7 7
+-- TODO: not total
 fill :: a -> [Int] -> Shaped a -> [a]
-fill z newRank (Shaped rank vs)
-  | newRank == rank = vs
-  | otherwise       = V.replicate (product newRank) z //
-    zip (sum . zipWith (*) (scanl1 (*) (1:reverse newRank)) . reverse <$>
-    sequence (flip take [0..] <$> rank)) vs
+fill z newShape (Shaped shape vs)
+  | newShape == shape = vs
+  | otherwise       = V.replicate (product newShape) z //
+    zip (sum . zipWith (*) (scanl (*) 1 (reverse newShape)) . reverse <$>
+    -- for shape [2,3] this would be [[0,0],[0,1],[0,2],[1,0],[1,1],[1,2]]
+    sequence (flip take [0..] <$> shape)) vs
 
 homogenize :: a -> [Int] -> [Shaped a] -> Shaped a
 homogenize z frame xs = let
-  origs = map (\(Shaped rs _) -> rs) xs
-  m = maximum $ length <$> origs
-  exts = map (\xs -> replicate (m - length xs) 1 ++ xs) origs
-  resultRank = foldl1' (zipWith max) exts
-  in Shaped (frame ++ resultRank) $ V.concat $ fill z resultRank <$> xs
+  origShapes = map (\(Shaped rs _) -> rs) xs
+  -- m is maximum rank
+  m = maximum $ length <$> origShapes
+  -- exts pads ones left of each shapes to match the maximum rank
+  exts = map (\xs -> replicate (m - length xs) 1 ++ xs) origShapes
+  -- resultShape has for each axis the maximum of all shapes
+  resultShape = foldl1' (zipWith max) exts
+  in Shaped (frame ++ resultShape) $ V.concat $ fill z resultShape <$> xs
 
 go1 :: a -> Int -> (Shaped a -> Shaped a) -> Shaped a -> Shaped a
 go1 z mv v (Shaped shape xs) = homogenize z frame

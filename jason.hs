@@ -19,12 +19,18 @@ data JMonad = JMonad Int (Noun -> Noun)
 data JDyad  = JDyad Int Int (Noun -> Noun -> Noun)
 type Dict = M.Map String Jumble
 
+-- >>> parseTest jLine "i. 2 3 4"
+-- ["i.","2 3 4"]
 jLine :: Parser [String]
 jLine = map unwords . groupBy ((&&) $:: isJNum ~> isJNum ~> id) -- Join numbers.
   <$> (spaces *> many jToken)  -- Eat leading spaces.
 
+isJNum :: String -> Bool
 isJNum s = fromMaybe False $ (&&) <$> (((||) <$> isDigit <*> (== '_')) <$> headMay s) <*> ((`notElem` ".:") <$> lastMay s)
 
+-- >>> parseTest jToken "i. 2 3 4"
+-- "i."
+jToken :: Parser String
 jToken =
     ( (string "NB." >>= (<$> many anyChar) . (++)) -- NB.
   <|> do
@@ -55,6 +61,7 @@ eval dict s = case parse jLine "" s of
     (mj, dict') = ast True dict xs []
     in (dump <$> mj, dict')
 
+dump :: Jumble -> String
 dump j = let Shaped _ xs = jOpen j in case jGetI $ head xs of
   Just 0  -> show $ jOpen $ xs!!1
   Nothing -> show j

@@ -12,15 +12,19 @@ import Data.Ord
 import Data.Ratio
 import Text.Printf
 import qualified Data.List as V
+import Test.QuickCheck
 
 -- TODO: Infinity.
 data Jumble = I Integer
-            | X Integer
+            | X Integer -- extended (64-bit) precision
             | Q (Ratio Integer)
             | D Double
             | Z (Double, Double)
             | S String
             | Box (Shaped Jumble) deriving Eq
+
+instance Arbitrary Jumble where
+    arbitrary = oneof [I <$> arbitrary, X <$> arbitrary, Q <$> arbitrary, D <$> arbitrary, Z <$> arbitrary, S <$> arbitrary, Box <$> arbitrary]
 
 jShowInt n
   | n < 0     = '_':jShowInt (-n)
@@ -59,6 +63,8 @@ readJumble s
 intToJumble :: Integral a => a -> Jumble
 intToJumble = checkOverflow . fromIntegral
 
+-- TODO: not total
+jGets :: Jumble -> Maybe String
 jGets (Box (Shaped [] xs))
   | S s <- head xs = Just s
   | otherwise = Nothing
@@ -76,6 +82,7 @@ jumbleToInt (I x) = fromIntegral x
 jumbleToInt (X x) = fromIntegral x
 jumbleToInt _ = error "domain error"
 
+-- promote
 pro (I x) (I y) = (I x, I y)
 pro (X x) (X y) = (X x, X y)
 pro (Q x) (Q y) = (Q x, Q y)
