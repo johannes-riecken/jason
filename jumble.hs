@@ -13,6 +13,10 @@ import Data.Ratio
 import Text.Printf
 import qualified Data.List as V
 import Test.QuickCheck
+import Safe
+import Text.Parsec (noneOf, char, parse)
+import Control.Applicative
+import Data.Either.Combinators
 
 -- TODO: Infinity.
 data Jumble = I Integer
@@ -55,10 +59,7 @@ instance Show Jumble where
   show (Box x) = "[" ++ show x ++ "]"
 
 readJumble :: String -> Maybe Jumble
-readJumble s
-  | all isDigit s  = Just $ checkOverflow (read s :: Integer)
-  | head s == '\'' = Just $ S $ init $ tail s
-  | otherwise      = Nothing
+readJumble s = (checkOverflow <$> (readMay s :: Maybe Integer)) <|> (S <$> rightToMaybe (parse (char '\'' *> many (noneOf "'") <* char '\'') "" s))
 
 intToJumble :: Integral a => a -> Jumble
 intToJumble = checkOverflow . fromIntegral
