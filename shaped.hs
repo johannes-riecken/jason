@@ -41,7 +41,7 @@ separator n = replicate n '\n'
 -- of the axes in order joined with that level's separator
 keepChunking :: Show a => Shaped a -> [String]
 keepChunking (Shaped axes ys) = snd $ foldl'
-    (\(level, ys) x -> (succ level, intercalate (separator level) <$> chunk x ys))
+    (\(level, ys) x -> (succ level, intercalate (separator level) . (if x < 0 then reverse else id) <$> chunk (abs x) ys))
     (0, fmap show ys) axes
 
 -- chunk splits a list into chunks of size n, discarding partial chunks at the
