@@ -9,11 +9,12 @@ import Data.Maybe
 import qualified Data.Set as S
 import qualified Data.List as V
 import System.IO
-import Text.ParserCombinators.Parsec
+import Text.ParserCombinators.Parsec hiding (many, (<|>))
 import Safe
 import Data.List.Extra
 import Text.Printf
 import Debug.Trace
+import Control.Applicative
 
 type Noun = Shaped Jumble
 data JMonad = JMonad Int (Noun -> Noun)
@@ -32,16 +33,16 @@ isJNum s = fromMaybe False $ (&&) <$> (((||) <$> isDigit <*> (== '_')) <$> headM
 -- >>> parseTest jToken "i. 2 3 4"
 -- "i."
 jToken :: Parser String
-jToken =
-    ( (string "NB." >>= (<$> many anyChar) . (++)) -- NB.
-  <|> do
-    char '\''
-    s <- concat <$> many (many1 (noneOf "'") <|> try (string "''"))
-    char '\'' <?> "closing quote"
-    return $ concat ["'", s, "'"]
-  <|> ((++) <$> (many1 (char '_' <|> alphaNum) <|> count 1 anyChar)
-  <*> many (oneOf ".:")) -- e.g. "ab_12" or "#" followed by e.g. "..:.:.::.".
-    ) >>= (spaces >>) . return -- Eat trailing spaces.
+jToken = (
+    (string "NB." <> many anyChar)
+    <|> (
+        string "'" <>
+        (concat <$> many (some (noneOf "'") <|> try (string "''"))) <>
+        string "'")
+    <|> (
+        (some (char '_' <|> alphaNum) <|> count 1 anyChar) <>
+        many (oneOf ".:"))
+    ) <* spaces
 
 main = repl M.empty
 
