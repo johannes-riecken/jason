@@ -15,6 +15,8 @@ import Data.List.Extra
 import Text.Printf
 import Debug.Trace
 import Control.Applicative
+import Control.Monad.Trans.Maybe
+import Control.Monad.IO.Class
 
 type Noun = Shaped Jumble
 data JMonad = JMonad Int (Noun -> Noun)
@@ -44,17 +46,16 @@ jToken = (
         many (oneOf ".:"))
     ) <* spaces
 
-main = repl M.empty
+main = void $ runMaybeT (repl M.empty)
 
-repl :: Dict -> IO ()
-repl dict = do
-  hFlush stdout
-  done <- isEOF
-  unless done $ do
-    s <- getLine
-    let (out, dict') = eval dict s
-    unless (isNothing out) $ putStrLn $ fromJust out
-    repl dict'
+repl :: Dict -> MaybeT IO String
+repl dict = forever $ do
+  liftIO $ hFlush stdout
+  done <- liftIO isEOF
+  guard $ not done
+  s <- liftIO getLine
+  let (out, dict') = eval dict s
+  unless (isNothing out) $ liftIO $ putStrLn $ fromJust out
 
 eval :: Dict -> String -> (Maybe String, Dict)
 eval dict s = case parse jLine "" s of
