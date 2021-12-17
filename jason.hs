@@ -10,9 +10,10 @@ import qualified Data.Set as S
 import qualified Data.List as V
 import System.IO
 import Text.ParserCombinators.Parsec
-import Data.Function.Pointless
 import Safe
 import Data.List.Extra
+import Text.Printf
+import Debug.Trace
 
 type Noun = Shaped Jumble
 data JMonad = JMonad Int (Noun -> Noun)
@@ -22,7 +23,7 @@ type Dict = M.Map String Jumble
 -- >>> parseTest jLine "i. 2 3 4"
 -- ["i.","2 3 4"]
 jLine :: Parser [String]
-jLine = map unwords . groupBy ((&&) $:: isJNum ~> isJNum ~> id) -- Join numbers.
+jLine = map unwords . groupBy ((&&) `on` isJNum) -- Join numbers.
   <$> (spaces *> many jToken)  -- Eat leading spaces.
 
 isJNum :: String -> Bool
@@ -44,6 +45,7 @@ jToken =
 
 main = repl M.empty
 
+repl :: Dict -> IO ()
 repl dict = do
   hFlush stdout
   done <- isEOF
@@ -58,6 +60,7 @@ eval dict s = case parse jLine "" s of
   Left err -> (Just $ "| " ++ show err, dict)
   Right ws -> let
     xs = "" : reverse ("":filter (not . isPrefixOf "NB.") ws)
+    -- (mj, dict') = trace (show $ ast True dict xs []) $ ast True dict xs []
     (mj, dict') = ast True dict xs []
     in (dump <$> mj, dict')
 
@@ -66,18 +69,26 @@ dump j = let Shaped _ xs = jOpen j in case jGetI $ head xs of
   Just 0  -> show $ jOpen $ xs!!1
   Nothing -> show j
 
+jZero :: Jumble
 jZero = intToJumble 0
+
+verb1 :: (JMonad, a) -> Shaped Jumble -> Shaped Jumble
 verb1 (JMonad mu u, _)   = go1 jZero mu u
+
+verb2 :: (a, JDyad) -> Shaped Jumble -> Shaped Jumble -> Shaped Jumble
 verb2 (_, JDyad lu ru u) = go2 jZero lu ru u
 
 -- Shortcut for J monads of rank 0 that output atoms.
+atomic1 :: (Jumble -> Jumble) -> JMonad
 atomic1 f = JMonad 0  $ \(Shaped [] xs)
   -> pure $ f (head xs)
 
 -- Shortcut for J dyads of rank 0 0 that output atoms.
+atomic2 :: (Jumble -> Jumble -> Jumble) -> JDyad
 atomic2 f = JDyad 0 0 $ \(Shaped [] xs) (Shaped [] ys)
   -> pure $ f (head xs) (head ys)
 
+verbDict :: M.Map String (JMonad, JDyad)
 verbDict = M.fromList
   [ ("+:", (atomic1 $ join jAdd, undefined))
   , ("*:", (atomic1 $ join jMul, undefined))
@@ -119,7 +130,7 @@ verbDict = M.fromList
       ))
   , ("i.",
       ( JMonad 1 $ \(Shaped _ xs) -> let ns = jumbleToInt <$>  xs
-          in shapeList ns $ intToJumble <$> [0..product ns - 1]
+          in shapeList ns $ intToJumble <$> [0..product (map abs ns) - 1]
       , undefined
       ))
   , ("j.",
@@ -136,6 +147,7 @@ verbDict = M.fromList
       ))
   ]
 
+adverbDict :: M.Map String ((JMonad, JDyad) -> (JMonad, JDyad))
 adverbDict = M.fromList
   [ ("/", \v@(_, JDyad lu ru op) ->
     ( JMonad maxBound $ \x@(Shaped rs xs) -> case rs of
@@ -157,6 +169,11 @@ adverbDict = M.fromList
     ))
   ]
 
+conjunctionDict :: M.Map
+                        [Char]
+                        (a, Shaped Jumble -> (a1, JDyad) -> (JMonad, JDyad),
+                         (a2, JDyad) -> Shaped Jumble -> (JMonad, JDyad),
+                         (JMonad, JDyad) -> (JMonad, JDyad) -> (JMonad, JDyad))
 conjunctionDict = M.fromList
   [ ("&", (undefined, jBondM, jBondN, jCompose))
   , ("@", (undefined, undefined, undefined, jAtop))
@@ -164,6 +181,7 @@ conjunctionDict = M.fromList
   , ("@.", (undefined, undefined, undefined, undefined))
   ]
 
+jHead :: Shaped a -> Shaped a
 jHead x@(Shaped rrs xs)
   | null rrs     = x
   | r == 0 = x
@@ -172,9 +190,11 @@ jHead x@(Shaped rrs xs)
     (r:rs) = rrs
     sz = product rs
 
+jKey :: (JMonad, a) -> Shaped Jumble -> Shaped Jumble -> Shaped Jumble
 jKey v x y = let ((_, p), (_:ss, q)) = listsFrom x y
   in post [length $ nubFast p] $ map (\ks -> verb1 v $ Shaped (length ks:ss) $ concatMap (q!!) ks) $ (`elemIndices` p) <$> nubFast p
 
+nubFast :: [[Jumble]] -> [[Jumble]]
 nubFast xs = reverse $ f [] xs S.empty
   where
     f acc []     _    = acc

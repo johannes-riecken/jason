@@ -25,7 +25,9 @@ data Jumble = I Integer
             | D Double
             | Z (Double, Double)
             | S String
-            | Box (Shaped Jumble) deriving Eq
+            | Box (Shaped Jumble)
+            deriving (Eq)
+            -- deriving (Show)
 
 instance Arbitrary Jumble where
     arbitrary = oneof [I <$> arbitrary, X <$> arbitrary, Q <$> arbitrary, D <$> arbitrary, Z <$> arbitrary, S <$> arbitrary, Box <$> arbitrary]

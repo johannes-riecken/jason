@@ -20,6 +20,7 @@ slice i n = take n . drop i
 
 data Shaped a = Shaped [Int] [a]
     deriving (Eq, Generic1)
+    -- deriving (Show)
     deriving (Functor, Applicative) via Generically1 Shaped
 
 instance Arbitrary a => Arbitrary (Shaped a) where
@@ -61,7 +62,7 @@ fromList xs = Shaped [length xs] xs
 -- TODO: fails with empty list, maybe replace with non-empty list
 shapeList :: [Int] -> [a] -> Shaped a
 shapeList shape xs =
-  Shaped shape (take (product shape) (cycle xs))
+  Shaped shape (take (product (map abs shape)) (cycle xs))
 
 -- fill pads with zero values to match the new shape
 -- example:
@@ -91,6 +92,9 @@ homogenize z frame xs = let
   resultShape = foldl1' (zipWith max) exts
   in Shaped (frame ++ resultShape) $ V.concat $ fill z resultShape <$> xs
 
+-- Takes a fill value, rank, function, and input Shaped array.
+-- Runs the function using the given rank (or the input array rank, whichever
+-- is lower), using the given fill value if needed.
 go1 :: a -> Int -> (Shaped a -> Shaped a) -> Shaped a -> Shaped a
 go1 z mv v (Shaped shape xs) = homogenize z frame
   [v (Shaped rank $ slice (i*sz) sz xs) | i <- [0..product frame-1]]
@@ -98,6 +102,9 @@ go1 z mv v (Shaped shape xs) = homogenize z frame
     (frame, rank) = splitAt (length shape - min mv (length shape)) shape
     sz = product rank
 
+-- Two-argument variant of the above.
+-- Takes a fill value, left and right rank, function, and two input Shaped
+-- arrays.
 go2 :: a -> Int -> Int -> (Shaped a -> Shaped a -> Shaped a) ->
   Shaped a -> Shaped a -> Shaped a
 go2 z lv rv v (Shaped shapeX xs) (Shaped shapeY ys)
