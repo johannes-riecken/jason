@@ -67,6 +67,8 @@ eval dict s = case parse jLine "" s of
     in (dump <$> mj, dict')
 
 dump :: Jumble -> String
+-- if the head of the boxed data in j matches (I _), show the opened next
+-- element, else show the entire j
 dump j = let Shaped _ xs = jOpen j in case jGetI $ head xs of
   Just 0  -> show $ jOpen $ xs!!1
   Nothing -> show j
@@ -183,15 +185,17 @@ conjunctionDict = M.fromList
   , ("@.", (undefined, undefined, undefined, undefined))
   ]
 
+-- equivalent to monadic {.
 jHead :: Shaped a -> Shaped a
 jHead x@(Shaped rrs xs)
   | null rrs     = x
   | r == 0 = x
-  | otherwise    = Shaped rs $ slice 0 sz xs
+  | otherwise    = Shaped rs $ take sz xs
   where
     (r:rs) = rrs
     sz = product rs
 
+-- equivalent to dyadic /.
 jKey :: (JMonad, a) -> Shaped Jumble -> Shaped Jumble -> Shaped Jumble
 jKey v x y = let ((_, p), (_:ss, q)) = listsFrom x y
   in post [length $ nubFast p] $ map (\ks -> verb1 v $ Shaped (length ks:ss) $ concatMap (q!!) ks) $ (`elemIndices` p) <$> nubFast p
@@ -204,9 +208,11 @@ nubFast xs = reverse $ f [] xs S.empty
       | x `S.member` seen = f acc xs seen
       | otherwise         = f (x:acc) xs (S.insert x seen)
 
+-- equivalent to dyadic /:
 jSortUp x@(Shaped rrs _) y = let ((_, p), (_, q)) = listsFrom x y
   in Shaped rrs $ V.concat $ snd <$> sortOn fst (zip q p)
 
+listsFrom :: Shaped a -> Shaped b -> (([Int], [[a]]), ([Int], [[b]]))
 listsFrom (Shaped rrs xs) (Shaped sss ys)
   | r /= s = error "length error"
   | otherwise = ((r:rs, p), (s:ss, q))
@@ -216,18 +222,18 @@ listsFrom (Shaped rrs xs) (Shaped sss ys)
     p = [slice (i*sz) sz xs | i <- [0..r-1]] where sz = product rs
     q = [slice (i*sz) sz ys | i <- [0..s-1]] where sz = product ss
 
+-- equivalent to monadic I.
 jIndices x@(Shaped rs xs) = let
-  v =  V.concat [V.replicate (jumbleToInt $ xs!!i) (intToJumble i) | i <- [0..V.length xs - 1]]
-  in Shaped [V.length v] v
+  v =  concat [replicate (jumbleToInt $ xs!!i) (intToJumble i) | i <- [0..length xs - 1]]
+  in Shaped [length v] v
 
+-- equivalent to dyadic #:
 jAntibase :: Noun -> Noun -> Noun
 jAntibase (Shaped rs xs) y@(Shaped [] ys) = Shaped [V.length v] v
   where
     v =  intToJumble <$> f [] ms (jumbleToInt $ head ys)
     ms = reverse $ jumbleToInt <$>  xs
-    f acc [] _ = acc
-    f acc (m:ms) n = let (q, r) = divMod n m
-      in f (r:acc) ms q
+    f acc ms n = fst $ foldl' (\(acc,n) m -> let (q,r) = divMod n m in (r:acc,q)) (acc,n) ms
 
 jCopy x@(Shaped rrs xs) y@(Shaped sss ys)
   | null rrs && null sss = jCopy (Shaped [1] xs) (Shaped [1] ys)
