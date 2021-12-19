@@ -235,6 +235,7 @@ jAntibase (Shaped rs xs) y@(Shaped [] ys) = Shaped [V.length v] v
     ms = reverse $ jumbleToInt <$>  xs
     f acc ms n = fst $ foldl' (\(acc,n) m -> let (q,r) = divMod n m in (r:acc,q)) (acc,n) ms
 
+-- equivalent to dyadic #
 jCopy x@(Shaped rrs xs) y@(Shaped sss ys)
   | null rrs && null sss = jCopy (Shaped [1] xs) (Shaped [1] ys)
   | null rrs = let k = jumbleToInt (head xs) in Shaped (s * k:ss) $ V.concat $ replicate k ys
@@ -322,6 +323,7 @@ ast echo dict xs st
           | otherwise       = Just $ jPuts $ "|syntax error: " ++ show st
     reduce = ast True dict xs
 
+atomize :: String -> Jumble
 atomize s
   | null s = jPuts ""
   | length ws > 1 = maybe (jPuts "|syntax error") (tag 0 . fromList) $ mapM readJumble ws
@@ -329,8 +331,8 @@ atomize s
   | otherwise = jPuts s
   where ws = words s
 
-sym dict j | Just s <- jGets j, isName s = M.lookup s dict
-           | otherwise = Nothing
+sym :: M.Map String a -> Jumble -> Maybe a
+sym dict j = jGets j >>= (`M.lookup` dict)
 
 run :: Dict -> Jumble -> Jumble
 run dict j
@@ -384,8 +386,6 @@ tag :: Integral a => a  -> Noun -> Jumble
 tag i m = jBox $ fromList [jBox $ pure $ intToJumble i, jBox m]
 
 nounOf j = let Shaped _ xs = jOpen j in jOpen $ xs!!1
-
-isName = all isAlpha
 
 jAtop u v@(JMonad mv _, _) =
   (JMonad mv $ verb1 u . verb1 v, JDyad mv mv $ (verb1 u .) . verb2 v)
