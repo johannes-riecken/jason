@@ -17,6 +17,10 @@ import Safe
 import Text.Parsec (noneOf, char, parse)
 import Control.Applicative
 import Data.Either.Combinators
+import Data.Function.Pointless
+import Data.List.NonEmpty (NonEmpty(..))
+import qualified Data.List.NonEmpty as NE
+import Control.Comonad
 
 -- TODO: Infinity.
 data Jumble = I Integer
@@ -69,12 +73,13 @@ intToJumble = checkOverflow . fromIntegral
 -- TODO: not total
 jGets :: Jumble -> Maybe String
 jGets (Box (Shaped [] xs))
-  | S s <- head xs = Just s
+  | S s <- extract xs = Just s
   | otherwise = Nothing
 jGets _ = Nothing
 
+jGetI :: Jumble -> Maybe Integer
 jGetI (Box (Shaped [] xs))
-  | I x <- head xs = Just x
+  | I x <- extract xs = Just x
   | otherwise = Nothing
 jGetI _ = Nothing
 
@@ -215,7 +220,7 @@ jFloor (Z (x, y)) = undefined -- TODO
 
 jImaginary = Z (0, 1)
 
-post :: [Int] -> [Shaped Jumble] -> Shaped Jumble
+post :: [Int] -> NonEmpty (Shaped Jumble) -> Shaped Jumble
 post frame xs = typeMatch $ homogenize (intToJumble 0) frame xs
 
 typeMatch :: Shaped Jumble -> Shaped Jumble
@@ -223,5 +228,5 @@ typeMatch arg@(Shaped rs xs)
   | V.null xs = arg
   | otherwise = let
     b :: Jumble
-    b = V.foldl1' ((fst .) . pro) xs
+    b = V.foldl1' (fst .: pro) (NE.toList xs)
     in Shaped rs $ fst . (`pro` b) <$> xs
