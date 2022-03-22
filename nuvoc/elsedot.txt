@@ -1,0 +1,60 @@
+
+
+
+
+
+
+
+
+
+****** Vocabulary/elsedot ******
+From J Wiki
+< Vocabulary
+Jump to: navigation, search
+>> <<   Back_to:_Vocabulary Thru_to:_Dictionary
+      else. Execute alternative Control
+      elseif. condition do. Evaluate alternative condition Control
+Valid only inside an explicit_definition.
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+For use with: if..
+See their usage and examples in the ancillary pages T-block and B-block.
+
+Retrieved from "https://code.jsoftware.com/mediawiki/index.php?title=Vocabulary/elsedot&oldid=27207"
+***** Navigation menu *****
+**** Personal tools ****
+    * Log_in
+**** Namespaces ****
+    * Page
+    * Discussion
+??
+**** Variants ****
+**** Views ****
+    * Read
+    * View_source
+    * View_history
+??
+**** More ****
+**** Search ****
+[Unknown INPUT type][Search][Go]
+**** Navigation ****
+    * New_Users
+    * Guides
+    * NuVoc
+    * System
+    * Showcase
+    * Library
+    * Community
+    * Recent_changes
+    * Random_page
+    * J_wiki_search
+**** Tools ****
+    * What_links_here
+    * Related_changes
+    * Special_pages
+    * Printable_version
+    * Permanent_link
+    * Page_information
+    * Cite_this_page
+    * This page was last edited on 25 October 2019, at 14:22.
+    * About_J_Wiki
+    * [Powered_by_MediaWiki]

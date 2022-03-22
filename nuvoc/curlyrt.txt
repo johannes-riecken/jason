@@ -1,0 +1,428 @@
+
+
+
+
+
+
+
+
+
+****** Vocabulary/curlyrt ******
+From J Wiki
+< Vocabulary
+Jump to: navigation, search
+>> <<   Down_to:_Dyad   Back_to:_Vocabulary Thru_to:_Dictionary
+      m} y Composite Item Adverb
+Rank_Infinity -- operates on x and y as a whole -- WHY_IS_THIS_IMPORTANT?
+
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+Create an array having the shape of an item of y that's a composite of the items of y.
+Each atom of operand m selects an atom from the corresponding positions of the items of y
+   ] y=: 'abcde' ,: 'ABCDE'
+abcde
+ABCDE
+   0 1 0 0 1 } y  NB. for each atom of m, choose an atom from the items of y
+aBcdE
+    * Operand m must have the same shape as an item of y.
+    * Argument y meanwhile is of course a list of items of the same shape as m.
+    * Phrase  m}y has the shape of m, but it is a composite:
+          o the atom of m (call it: a) at position: p such that  a =. (<p) {m indexes into the items of y (a { (<p){y) to select the result atom for position: p .
+Phrase  m} y is equivalent to  m {"0 1&.|: y, with the restriction that m must be numeric.
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+**** Common Uses ****
+The only reason to use  m} y is one of efficiency:
+    * either you want to avoid the transposes of m {"0 1&.|: y
+    * or you want to use one of the Special_Combinations.
+1. Create a composite item in place
+   a =: 'ABC'
+   b =: 'abc'
+   a =: 0 1 1} a ,: b
+   a
+Abc
+This form, where m} y appears in an assignment, is handled by special code that modifies a without first making a copy. Sentences taking advantage of this feature are very_restricted_in_form.
+Some other assignments using  m} y are not in-place but avoid copying arguments. They are likewise very_restricted_in_form.
+2. Create a composite item without transposing m and y
+   ] a =: i. 2 3
+0 1 2
+3 4 5
+
+   ] b =: 100 + a          NB. Two arrays
+100 101 102
+103 104 105
+
+   ] c =: 0 1 0 ,: 1 1 0   NB. selector
+0 1 0
+1 1 0
+
+   c} a ,: b               NB. composite item
+  0 101 2
+103 104 5
+
+   c {"0 1&.|: a,:b        NB. equivalent
+  0 101 2
+103 104 5
+
+3. Scatter-point replace using a Boolean selector:
+   ]mat=. _5]\'abcdefghijklmnopqrstuvwxy'
+abcde
+fghij
+klmno
+pqrst
+uvwxy
+   (mat e. 'aeiou') } mat,:'*'          NB. Replace vowels
+*bcd*
+fgh*j
+klmn*
+pqrst
+*vwxy
+   (mat e. 'aeiou') } mat,:toupper mat  NB. Upper-case vowels
+AbcdE
+fghIj
+klmnO
+pqrst
+Uvwxy
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+**** Details ****
+1. Operand m can be a gerund (v0`v1`v2) or (v1`v2), in which case m}y is executed as  (v1 y)} (v2 y). This form is not executed in place.
+2. In-place assignment requires that  1 = 3!:0 myphrase, that is, the internal type of myphrase is Boolean.
+It does not suffice for the atoms of myphrase to consist only of 0 or 1 — the actual type must be Boolean!
+3. An obsolete_form_of_Composite_Items: (u} y) was used in early versions of J.
+where operand u is a verb. Its use is deprecated in favor of  m} y.
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+**** Oddities ****
+1. Verb  m} gives  index error when y has only 1 item
+   (,0)} ,. 5
+|index error
+|       (,0)},.5
+   (,0)} 2 $ ,. 5
+5
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+**** Use These Combinations ****
+Combinations using  m} y that have exceptionally_good_performance include:
+                                                                                             Type;                                                                                                                  Variants;                      Benefits;
+              What it does                                                                Precisions;                                     Syntax                                                                  Restrictions                     Bug Warnings
+                                                                                             Ranks
+                                                                                                                                                                                            =. in place of =:
+            Composite item             the x arrays are the same precision and not boxed, extended integer, or rational    name =: i} x0,x1,...,xm,:xn If there are 2 x's, i may be Boolean or integer, but if more than 2 x's, i must be integer. avoids catenation and lamination
+                                                                                                                                                                                         No parentheses allowed
+      Composite item in place b is Boolean; x and name are the same precision and not boxed, extended integer, or rational       name =: b} x,:name                                                 Must be same name either side.                 avoids making a new copy of name
+                                                                                                                                 name =: b} name,: x                                                    No parentheses allowed
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+      x m} y Amend Adverb
+Rank_Infinity -- operates on [x and] y as a whole -- WHY_IS_THIS_IMPORTANT?
+
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+x m} y amends y by creating a new noun that is a copy of y with the locations m replaced by new values x
+   'gw' 0 3} 'cross'  NB. Replace items 0 and 3 with 'g' and 'w' respectively
+grows
+     [Important.png] Because } is an adverb creating a verb,
+     the amendment process uses the operand m and the arguments x and y.
+     Thus there are 3 parts to the amendment.
+m} is executed to produce an anonymous_verb that is executed on the arguments x and y.
+The anonymous verb has access to the value of m.
+     [Important.png] It's the Derived_Verb  m} that does the work of updating the array y.
+     This resembles assignment to an index of an array in other languages. But  x m} y can assign many indexes at once.
+     It also creates a new copy of the entire array y.
+     If you modify only a small portion of a very large array, use the in-place form given_below.
+x m} y is used in J much less than you would think, considering the importance of in-place array modification in other languages.
+Operand m gives the positions to be modified, and argument x the values to put there. In the simplest case there is only position
+   y =: 'abcdefghijklmnop'
+   y =: '*' 2} y            NB. Modify position 2
+   y
+ab*defghijklmnop
+Note, however, that a single atom in m refers to an item of y
+   ] y =: _4 ]\ 'abcdefghijklmnop'
+abcd
+efgh
+ijkl
+mnop
+
+   y =: '*' 2} y    NB. Now position 2 is a list
+   y
+abcd
+efgh
+****
+mnop
+Operand m may specify more than one target item of y
+   y =: 'abcdefghijklmnop'
+   y =: '*' 0 2 4 6} y
+   y
+*b*d*f*hijklmnop
+Each atom of m specifies a selection from y, just as with  x { y. Thus the above m has 4 selections:  0 2 4 6.
+Each selected item can be assigned a different value. The values in x must have the same shape as a cell of the selected portion of the array y. If x has lower rank than the selected part of y, it is replicated as needed.
+Details below. In the previous example x (an atom) matched the shape of a 0-cell of the selection.
+   y =: 'abcdefghijklmnop'
+   y =: 'ABCD' 0 2 4 6} y
+   y
+AbBdCfDhijklmnop
+Operand m can select_from_multiple_axes
+This is like multidimensional indexing in other languages.
+   ] y =: _4 ]\ 'abcdefghijklmnop'
+abcd
+efgh
+ijkl
+mnop
+
+   y =: '*' (<2 1)} y
+   y
+abcd
+efgh
+i*kl
+mnop
+Operand m can make multiple selections from multiple axes to select a region of the array to be modified
+   y =: _4 ]\ 'abcdefghijklmnop'
+   y =: '*' (<0 2;3 1)} y   NB. Modify rows 0 &2, columns 3&1
+   y
+a*c*
+efgh
+i*k*
+mnop
+If operand m is a numeric array of rank > 1, it specifies a scatter-modify: each 1-cell of m is the index_list of a cell of y. All the cells addressed by rows of m are replaced by cells of x. Note: scatter-modify is not implemented for sparse arrays. Use (<"1 index_matrix).
+Thus the 1-frame of m gives the frame of the selection.
+   y =: _4 ]\ 'abcdefghijklmnop'
+   y =: '*' (2 2$3 2 1 1)} y   NB. Multidimensional m; each row selects a cell. Selection is 2 0-cells
+   y
+abcd
+e*gh
+ijkl
+mn*p
+Argument x can give the new value for atoms independently
+   y =: _4 ]\ 'abcdefghijklmnop'
+   y =: 'AB' (<0 2;3 1)} y  NB. Store 'AB' into position 3&1 of each of rows 0&2
+   y
+aBcA
+efgh
+iBkA
+mnop
+
+   y =: _4 ]\ 'abcdefghijklmnop'
+   ]x =: 2 2$ 'ABCD'        NB. A different value for each modified atom
+AB
+CD
+   y =: x (<0 2;3 1)} y
+   y
+aBcA
+efgh
+iDkC
+mnop
+   y =: _4 ]\ 'abcdefghijklmnop'
+   y =: 'AB' (2 2$3 2 1 1)} y   NB. Multidimensional m; each row selects a cell. Selection is 2 0-cells.  A cell of x goes into each
+   y
+abcd
+eBgh
+ijkl
+mnAp
+The examples so far have used assignment in place, where the result of  x m} y is assigned back to the original y. But this is not essential. The result of (x m} y) is a new modified array, always having the same shape as y, that can be used like any other array
+   '*' 2} 'abcdefgh'        NB. Create an array and modify it.  The modified array is the result.
+ab*defgh
+     [Important.png] x m} y replaces parts of an array. If you want to modify internal portions of a multilevel boxed noun, look at utilities_for_amending_boxed_structures.
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+**** Common uses ****
+1. When converting seconds to hours/minutes/seconds, replace the first number in the base (HMS) with 0 to allow unlimited hours
+   HMS =: 24 60 60
+   HMS #: 96400   NB. this gives hours mod 24
+2 46 40
+   ((0) 0} HMS) #: 96400  NB. unlimited hours...
+26 46 40
+   (0) 0} HMS    NB. ...by using modified base
+0 60 60
+2. Force a 1 into the last position of a list of frets, to avoid losing text
+   text =. 'Mr. Jones and Mr. Smith are here.  Let them in.'
+   ] frets =. '.  ' E. text    NB. Find the ends of sentences
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+   frets <;.2 text             NB. Box the sentences.  Unfortunately the bit at the end is lost.
++---------------------------------+
+|Mr. Jones and Mr. Smith are here.|
++---------------------------------+
+   ((1) _1} frets) <;.2 text   NB. Stuff a 1 into the last position
++---------------------------------+--------------+
+|Mr. Jones and Mr. Smith are here.|  Let them in.|
++---------------------------------+--------------+
+   (1) _1} frets
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 1
+3. Replace a single box in a list of boxes
+   ]w =: ;:'The quick brown fox rested.'
++---+-----+-----+---+-------+
+|The|quick|brown|fox|rested.|
++---+-----+-----+---+-------+
+   (,&'ish' each 2 { w) 2} w
++---+-----+--------+---+-------+
+|The|quick|brownish|fox|rested.|
++---+-----+--------+---+-------+
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+**** More Information ****
+1. You can change portions of a noun in place (that is, without making a new copy of the noun), when no harm can come from doing so. The most common example of this is modification to a name that is about to be reassigned. Our examples have emphasized that form.
+In this form of in-place modification you immediately assign the result of  x m} namedy to the same name, so that the previous value of namedy can never again be used. Only in that case is it safe for J to create the new noun in the same location in memory as the old one.
+With big arrays, amendment without in-place assignment can be colossally inefficient
+   bigarray =: ] 5 (5)} bigarray   NB. same result as above, but 100,000 times slower
+Other places where in-place modification can be performed are discussed here.
+2. If m is a numeric array of rank > 1, each row of m gives the index_list of a cell of y to be modified. In other words, m is interpreted according to the rules below as if it were (<"1 m).
+3. Operand m may have any rank.
+The locations of y that will be altered are those that would be selected by  m { y.
+subject to the rule above that nonnumeric arrays m are boxed first
+This means
+    * the full_generality_of_indexing is allowed using boxed m
+    * if m is a list of boxes, each box of m specifies a separate selection.
+If m is an array, each atom a of m must select a result of the same shape.
+    * This doesn't mean that each a specifies a similar-looking region in y, but that
+    * The shapes resulting from the selections using each atom of m must be identical: in other words  $a{y must be the same for each a in m.
+   y =: i. 6 6
+
+   100 (0 1)} y            NB. selection is 2-list. Each atom specifies a row, so shapes match
+100 100 100 100 100 100
+100 100 100 100 100 100
+ 12  13  14  15  16  17
+ 18  19  20  21  22  23
+ 24  25  26  27  28  29
+ 30  31  32  33  34  35
+
+   100 (0;1)} y            NB. two selections, but same result
+100 100 100 100 100 100
+100 100 100 100 100 100
+ 12  13  14  15  16  17
+ 18  19  20  21  22  23
+ 24  25  26  27  28  29
+ 30  31  32  33  34  35
+
+   100 (0;1 2)} y          NB. second selection is bigger than the first --> error
+|domain error
+|   100    (0;1 2)}y
+
+   100 ((<0),(<a:;1))} y   NB. select a row and a column. Each is a 6-atom list --> OK
+100 100 100 100 100 100
+  6 100   8   9  10  11
+ 12 100  14  15  16  17
+ 18 100  20  21  22  23
+ 24 100  26  27  28  29
+ 30 100  32  33  34  35
+
+   100 ((<0),(<3;3 2 1 3 2 1))} y   NB. Same thing here too
+100 100 100 100 100 100
+  6   7   8   9  10  11
+ 12  13  14  15  16  17
+ 18 100 100 100  22  23
+ 24  25  26  27  28  29
+ 30  31  32  33  34  35
+3. Argument x must have the shape of a cell of  m{y
+x is replicated as needed to the shape of  m{y
+   y =: i. 2 3
+
+   100 (0}) y                     NB. `x` (an atom) has the shape of a 0-cell of m{y, and is replicated
+100 100 100
+  3   4   5
+
+   100 101 (0}) y                 NB. `x` is a 2-atom list, but m{y is a 3-atom list
+|length error
+|   100 101    (0})y
+
+   100 101 102 (0}) y             NB. `x` is a 3-atom list, and so is m{y
+100 101 102
+  3   4   5
+
+   100 101 102 (0 2}) i. 3 3      NB. `x` is a 2-atom list, m{y has shape 2 3, so x is replicated
+100 101 102
+  3   4   5
+100 101 102
+
+   100 101 (<(i. 2 2);0)} i. 4 4  NB. m{y has shape 2 2, x is replicated
+100  1  2  3
+101  5  6  7
+100  9 10 11
+101 13 14 15
+4. If the selections specified by the atoms of m overlap, the amendments are applied in order, leaving the last one as the survivor
+(Don't rely on this behavior in future versions of J!)
+   (100 200 300,:400 500 600) ((<0),(<a:;1))} i. 3 3
+100 400 300
+  3 500   5
+  6 600   8
+5. Operand m may be a gerund v0`v1`v2, in which case  x v0`v1`v2} y executes as
+(x v0 y) (x v1 y)} (x v2 y)
+Note: all the verbs  v0 v1 v2 are executed dyadically.
+This form of  x m} y is often useful in tacit_verbs. The modification is performed in-place if_possible.
+Apply a "substring;position couple": x (x -: substring;starting-position) to a given string y
+CASE 1:
+   X=: 'CDEFG'
+   M=: 2 3 4 5 6
+   Y=: 'abcdefghijklmnopqrstuvwxyz'
+   X M} Y
+abCDEFGhijklmnopqrstuvwxyz
+CASE 2:
+   x =: 'CDEFG';2                     NB. the "substring;starting-position" couple
+   y =: 'abcdefghijklmnopqrstuvwxyz'  NB. the target string
+   v0=: 4 : '0 {:: x'                 NB. return the substring from the couple: x
+   v1=: 4 : 0                         NB. return the list of indexes in y to amend
+'substring startpos' =. x
+startpos + i. #substring
+)
+   v2=: ]                             NB. simply return y from the phrase: x v2 y
+
+   (x v0 y) ; (x v1 y) ; (x v2 y)     NB. <--> X;M;Y in CASE 1 (Just checking for equivalence)
++-----+---------+--------------------------+
+|CDEFG|2 3 4 5 6|abcdefghijklmnopqrstuvwxyz|
++-----+---------+--------------------------+
+   g =: v0`v1`v2                      NB. assign the gerund to a pronoun: 'g'
+   type 'g'
++----+
+|noun|
++----+
+   x g} y                             NB. do the amend
+abCDEFGhijklmnopqrstuvwxyz
+   x v0`v1`v2} y                      NB. --or use gerund phrase itself directly
+abCDEFGhijklmnopqrstuvwxyz
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+**** Details ****
+1. An obsolete_form_of_Amend: (x u} y) was used in early versions of J.
+where operand u is a verb. Its use is deprecated in favor of  x m} y.
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+**** Use These Combinations ****
+Combinations using x m} y that have exceptionally_good_performance include:
+                                             Type;                                                                            Variants;         Benefits;
+       What it does                       Precisions;                                   Syntax                              Restrictions        Bug Warnings
+                                             Ranks
+                                                                          name =. x i} name                        =: in place of =.
+      Amend in place not boxed, extended integer, or rational            name =. x (i}) name                Must be same name either side.      avoids making a new copy of name
+                                                                         name =. name i}~ x             Parentheses allowed around x and i only
+                                                              or if y is an unnamed intermediate result
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+
+Retrieved from "https://code.jsoftware.com/mediawiki/index.php?title=Vocabulary/curlyrt&oldid=29576"
+Category:
+    * Voc
+***** Navigation menu *****
+**** Personal tools ****
+    * Log_in
+**** Namespaces ****
+    * Page
+    * Discussion
+??
+**** Variants ****
+**** Views ****
+    * Read
+    * View_source
+    * View_history
+??
+**** More ****
+**** Search ****
+[Unknown INPUT type][Search][Go]
+**** Navigation ****
+    * New_Users
+    * Guides
+    * NuVoc
+    * System
+    * Showcase
+    * Library
+    * Community
+    * Recent_changes
+    * Random_page
+    * J_wiki_search
+**** Tools ****
+    * What_links_here
+    * Related_changes
+    * Special_pages
+    * Printable_version
+    * Permanent_link
+    * Page_information
+    * Cite_this_page
+    * This page was last edited on 2 December 2020, at 18:30.
+    * About_J_Wiki
+    * [Powered_by_MediaWiki]

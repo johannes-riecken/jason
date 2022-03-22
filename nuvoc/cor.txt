@@ -1,0 +1,289 @@
+
+
+
+
+
+
+
+
+
+****** Vocabulary/cor ******
+From J Wiki
+< Vocabulary
+Jump to: navigation, search
+>> <<   Back_to:_Vocabulary Thru_to:_Dictionary
+      m : n Def Conjunction
+Rank_Infinity -- operates on x and y as a whole -- WHY_IS_THIS_IMPORTANT?
+
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+Defines entities of all types.
+     [Information.png] Conjunction (:) has several substantially different uses, requiring separate pages to document it
+         * A swatch (or roadmap) for the different uses of (:) you'll encounter <---THIS PAGE
+         * The_full_formal_details of Explicit Definition
+         * Anatomy of a sample explicit verb
+         * Monad/Dyad usage of (:) to put together monad and dyad valences from separate verbs
+         * Defining_a_noun as an explicit entity.
+     [Information.png] Direct_definition is a simpler alternative for defining new functions.
+This is a swatch for the different uses of (:) you'll encounter in published J code
+      #                 Sample sentence                                                                          What it defines
+      1  myverb =: 3 : 0                     Either an ambivalent_verb or a monad. More... [Notes: #1 #2]
+      2  myverb =: verb define               [Same as: 1]
+      3  myverb =: monad define              [Same as: 1]
+      4  myverb =: (3 : 0)"1                 [See: 1]. A verb of rank 1. More... [Notes: #1 #2 #3]
+      5  myverb =: 4 : 0                     A dyad. More... [Notes: #1 #5]
+      6  myverb =: dyad define               [Same as: 5]
+      7  myverb =: 0&$: :(4 : 0)             [See: 5]. An ambivalent_verb, x defaulting to 0. More... [Notes: #1 #5 #6]
+      8  plus =: 0&$: : +                    An ambivalent_verb, x defaulting to 0. Tacit verb. This example could also be written (0&+ : +)[Notes: #6]
+      9  myverb =: 3 : 'Jcode(y)'            A monad with a 1-line body. More... [Notes: #4]
+      10 myverb =: verb def 'Jcode(y)'       [Same as: 9]
+      11 myverb =: monad def 'Jcode(y)'      [Same as: 9]
+      12 myverb =: 4 : 'Jcode(x,y)'          A dyad with a 1-line body. More... [Notes: #4]
+      13 myverb =: dyad def 'Jcode(x,y)'     [Same as: 12]
+      14 3 : 0 ''                            [See: 1]. An anonymous monad, immediately executed with y=''. More... [Notes: #1 #7]
+      15 123 (4 : 0) 456                     [See: 5]. An anonymous dyad, immediately executed with x=123 and y=456. More... [Notes: #1 #7]
+      16 myadvb =: 1 : 0                     An adverb named: myadvb. More... [Notes: #1 #8]
+      17 myadvb =: 1 : 'Jcode(x,y)'          An adverb named: myadvb with a 1-line body. More... [Notes: #4 #8]
+      18 myconj =: 2 : 0                     A conjunction named: myconj. More... [Notes: #1 #8]
+      19 myconj =: 2 : 'Jcode(x,y)'          A conjunction named: myconj with a 1-line body. More... [Notes: #4 #8]
+      20 mynoun =: 0 : 0                     Body becomes a LF-separated_noun named: mynoun. More... [Notes: #1]
+      21 mynoun =: noun define               [Same as: 20]
+      22 mynoun =: convert 0 : 0             [See: 20]. Verb: convert determines the type of mynoun . More... [Notes: #1 #9]
+      23 mynoun =: > <;._2 (0 : 0)           [Common special case of: 22]. Name: mynoun becomes a table. More... [Notes: #1 #9]
+      24 mynoun =: > <;._2 [ 0 : 0           [Same as: 23].  [ can be replaced by  ]
+      25 0 : 0                               [See: 20]. Body is ignored (i.e. commented-out). More... [Notes: #1 #10]
+      26 smoutput 0 : 0                      [See: 20]. Body is written out to the J session. More... [Notes: #1 #11]
+      27 (<;._2 (0 : 0)) =: ". (0 : 0) -. LF [See: 23]. Multiple multiline nouns, with execution continuing More... [Notes: #1 #12]
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+**** Notes ****
+ #1. A multiline explicit definition is triggered by an invocation of the form m : 0 or m define where m indicate the type of entity (noun/adverb/conjunction/verb) being defined.
+The definition covers several successive lines of the script (or J session). This block of lines is called the body (of the definition). The body starts on the next line of the script, and includes all lines up to the terminator, which is a Right Parenthesis on a line by itself.
+3 : 0
+body line 1
+body line 2
+)
+The terminator line is not part of the body of the definition and is discarded.
+The result of the definition, which is a noun/verb/adverb/conjunction depending on the value of (m), replaces the invocation in the sentence, and execution of the sentence continues. Thus, in
+double =: verb define
+2 * y
+)
+    * the invocation is (verb define)
+    * the interpreter reads ahead to scan the body of the definition
+    * the body of the definition is the single line (2 * y)
+    * the definition creates a verb which then replaces the invocation in the sentence
+    * the sentence continues, assigning the new verb to the name double
+If you are typing into the J session, the block of lines starts with the next line entered after the sentence executing the : conjunction or define, and continues to the terminator. The normal 3-space indent at the J session prompt is suppressed while you are entering the body of the definition.
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+#2. The body of this explicit verb may optionally contain the separator (:) on a line by itself, like this:
+ ''optional text for the monadic valence''
+ :
+ ''optional text for the dyadic valence''
+If the body contains the separator (:), then the verb can be used in any valence for which text is given:
+    * text only above the separator - monad only
+    * text only below the : separator - dyad only
+    * text both above and below - ambivalent_verb, with the monad or dyad text being executed according to how the verb is used
+If the body doesn't contain the separator (:), then the verb may be used only as a monad.
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+#3. This shows how to specify the rank of myverb at the moment you define it.
+It saves you doing this:
+   myverb0=: 3 : 0
+NB. (verb body here)
+)
+   myverb=: myverb0"1
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+#4. The string: 'Jcode(x,y)' stands for a sentence in J code which optionally includes the arguments x and y (either or both may be absent).
+The string: 'Jcode(y)' stands for a sentence in J code which optionally includes the argument y, but must not include x. Otherwise you'll see no error until the verb is run, whereupon you see the following unhelpful behavior
+   foo=: 3 : 'x+y'
+
+   3 foo 4   NB. called as dyad
+|domain error: foo
+|   3     foo 4
+
+   foo 4     NB. called as monad
+|value error: x
+|       x+y
+The remedy in this case is to define foo=: 4 : 'x+y'
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+#5. The body of this explicit verb defines a dyad. It should not contain the separator (:) as shown in Note: #2. Otherwise those lines above the colon line are ignored.
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+#6. This shows how to define an ambivalent_verb where the monad is defined to be the same as the dyad with x=0.
+Note that this verb definition is strictly tacit, but with an embedded explicit verb (4 : 0).
+This is the recommended way of defaulting the x-argument, since the body uses Self-reference ($:) to avoid mention of the name myverb itself.
+However you'll often see this method used of defaulting x
+   myverb=: 3 : 0
+0 myverb y   NB. call the NAMED verb as a dyad with x=0
+:
+NB. (dyad body here)
+)
+Not recommended, since if you ever copy or change the name of the verb you must remember to change the recursive call within the body.
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+#7. Principle: If you provide the y-argument to a monad at the point it is defined, the verb is immediately executed to compute a noun. Ditto if you provide both x- and y-arguments to a dyad.
+This shows how to adjust a script whilst it is actually being loaded. You can set flags or change the definition of a given verb according to some feature of the user's platform.
+Example: suppose myverb comes in two forms:
+    * myverb_UNIX -- suitable for a UNIX platform
+    * myverb_WIN -- suitable for a Windows platform
+J sets the system flag IFWIN_z_ to 1 when running under Windows. You can use this flag to alter myverb accordingly
+3 : 0''
+if. IFWIN do. myverb=: myverb_WIN
+else.         myverb=: myverb_UNIX
+end.
+empty''   NB. to make sure this verb returns a noun not a verb
+)
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+#8. The body of a modifier resembles that of a verb, except that it will refer to at least one of the operands u v m n.
+v and n being undefined for an adverb.
+The created modifier will use its operand(s) to create a new entity, which may in turn be a verb referring to to its arguments.
+   + 2 : '(u v) y' *: 20
+420
+    * 2 : '(u v) y' created a modifier
+    * in + 2 : '(u v) y' *:, that modifier took the operands + and *: to create a verb
+    * that verb was executed on the value 20. It executed (+ *:) 20
+   #~ 2 : '(u v) y' # 'abc'
+aaabbbccc
+Same conjunction, different verbs, now executing (#~ #) 'abc'
+Details here.
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+#9. This shows how to represent a noun of any type as the body of an explicit definition.
+Example 1: replace convert by cutopen
+cutopen is a
+    * Standard_Library word(s) residing in the 'z'-locale
+    * Defined in the factory script stdlib.ijs which is located in  ~system/main/stdlib.ijs
+    * View the definition(s) in a JQt session by entering:  open '~system/main/stdlib.ijs'
+   DIRECTION=: cutopen 0 : 0
+North
+East
+South
+West
+)
+   DIRECTION
++-----+----+-----+----+
+|North|East|South|West|
++-----+----+-----+----+
+Example 2: replace convert by the verb: ".@>@cutopen
+   NOS=: ".@>@cutopen 0 : 0
+ 0.1  1.1  2.1  3.1  4.1
+ 5.1  6.1  7.1  8.1  9.1
+10.1 11.1 12.1 13.1 14.1
+)
+   smoutput $NOS
+3 5
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+#10. This shows how to include lines in a script which are to be ignored when the script is loaded.
+For instance, you can insert comments or comment-out lines of code without the use of NB.
+Example:
+0 : 0
+These are test-sentences for execution using Ctrl-R
+   IFWIN_z_ =: 0
+   IFWIN_z_ =: 1
+)
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+#11. This shows how to include lines in a script which are to be printed in the session whilst the script is being loaded.
+For instance, you can instruct the user how to proceed once the script is loaded
+Example:
+smoutput 0 : 0
+To run the program, enter:
+   run''
+)
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+#12. The definition creates a noun/verb/adverb/conjunction that then plays a normal part in the subsequent execution of the sentence. Example:
+   (<;._2 (0 : 0)) =: < (0 : 0) -. LF
+Lorem ipsum dolor sit amet, consectetur
+ adipiscing elit, sed do eiusmod
+)
+name1
+name2
+)
+   name1
+Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod
+   name2
+Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod
+Each occurrence of an invocation 0 : 0 causes the interpreter to read the body of a definition.
+   1. The right-hand one is encountered first in the normal order of execution; it produces a literal noun containing LF characters. This noun replaces the invocation in the sentence, and execution continues.
+   2. string-. LF removes the LF characters.
+   3. The string is boxed.
+   4. The left-hand 0 : 0 is executed, reading a list of names and creating a literal noun containing LF characters. This noun replaces the invocation in the sentence, and execution continues.
+   5. The names are converted to a list of boxed strings.
+   6. The names are assigned with the text calculated earlier (this assignment removes the boxing).
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+
+Retrieved from "https://code.jsoftware.com/mediawiki/index.php?title=Vocabulary/cor&oldid=29941"
+Category:
+    * Voc
+***** Navigation menu *****
+**** Personal tools ****
+    * Log_in
+**** Namespaces ****
+    * Page
+    * Discussion
+??
+**** Variants ****
+**** Views ****
+    * Read
+    * View_source
+    * View_history
+??
+**** More ****
+**** Search ****
+[Unknown INPUT type][Search][Go]
+**** Navigation ****
+    * New_Users
+    * Guides
+    * NuVoc
+    * System
+    * Showcase
+    * Library
+    * Community
+    * Recent_changes
+    * Random_page
+    * J_wiki_search
+**** Tools ****
+    * What_links_here
+    * Related_changes
+    * Special_pages
+    * Printable_version
+    * Permanent_link
+    * Page_information
+    * Cite_this_page
+    * This page was last edited on 17 January 2021, at 15:48.
+    * About_J_Wiki
+    * [Powered_by_MediaWiki]

@@ -1,0 +1,315 @@
+
+
+
+
+
+
+
+
+
+****** Vocabulary/semico ******
+From J Wiki
+< Vocabulary
+Jump to: navigation, search
+>> <<   Down_to:_Dyad   Back_to:_Vocabulary Thru_to:_Dictionary
+      ;: y Words
+Rank_1 -- operates on lists of y, producing a list of variable length for each one -- WHY_IS_THIS_IMPORTANT?
+
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+Partitions a string into boxed words according to J's rules_for_word_formation.
+In other programming languages, words are called tokens.
+   ;: '<;._1'
++-+--+--+
+|<|;.|_1|
++-+--+--+
+Note that an entire numeric list or a comment is a single word.
+This matters if you use (;:) to tokenize some syntax resembling J but not J
+   y=: 'Fine, easy as 1 2 3?'
+   ;: y
++----+-+----+--+-----+-+
+|Fine|,|easy|as|1 2 3|?|
++----+-+----+--+-----+-+
+
+   z=: ' ''s t''=: 3 5'   NB. multiple assignment'
+   ;: z
++-----+--+---+-----------------------+
+|'s t'|=:|3 5|NB. multiple assignment|
++-----+--+---+-----------------------+
+Compare this with the action of verb cutopen
+cutopen is a
+    * Standard_Library word(s) residing in the 'z'-locale
+    * Defined in the factory script stdlib.ijs which is located in  ~system/main/stdlib.ijs
+    * View the definition(s) in a JQt session by entering:  open '~system/main/stdlib.ijs'
+   cutopen y
++-----+----+--+-+-+--+
+|Fine,|easy|as|1|2|3?|
++-----+----+--+-+-+--+
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+**** Common uses ****
+1. Partition an open list into boxed strings
+   ;: 'alpha bravo charlie'
++-----+-----+-------+
+|alpha|bravo|charlie|
++-----+-----+-------+
+Useful if you are sure J's word rules will work for your y.
+Not recommended for general parsing, because ;:y signals a J error if the string is ill-formed according to J's rules
+   ]z =: 'Eugene O''Neill'
+Eugene O'Neill
+   ;: z
+|open quote
+|   Eugene O'Neill
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+      x ;: y Sequential Machine
+Rank_Infinity -- operates on x and y as a whole -- WHY_IS_THIS_IMPORTANT?
+
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+Partitions a string (or a more general kind of list) y according to the rules of a given finite-state_(Mealy)_machine defined by noun x.
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+**** Common uses ****
+1. Tokenize strings of code following some other syntax than J. The x-argument defines the required syntax.
+Processing a string using (x ;: y) is typically many times faster than using other primitives.
+The entry_in_the_J_Dictionary for ;: has a fully-worked example.
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+**** Details ****
+*** Overview ***
+A brief overview is as follows, indicating the key terms
+    * The x argument provides the machine description, which comprises
+          o the output style f which controls the information added to the output array
+          o the row/action table s, also called the state table or transition table, which indicates, for each state number and input, what the machine should output and what state it should go to next
+          o the input classes m which are used to convert each item of y to an input code
+          o the initial values of variables used for each iteration
+                # input pointer i
+                # word pointer j
+                # row number (also called a state number) r
+                # final input d
+    * The output array is initialized to empty.
+    * Each item of input is converted into a column number.
+    * The column numbers are processed, one per iteration:
+          o the next column number is supplied to the row/action table: the row number and column number specify an item of the table, which is a 2-element vector giving the new row number and an action code.
+          o The action is performed and the row number is updated. Some actions add rows to the output array
+    * Execution continues until a 'quit' action is encountered or all the column numbers have been supplied.
+    * the output array, which contains the accumulated results of the actions performed, becomes the result of the verb.
+*** The y argument: sequence of inputs ***
+The y argument is the sequence of inputs to the machine. y will be converted to a list of numbers using the m portion of the x argument.
+Each item of y produces one input to the machine. The inputs become column indexes to the state table.
+*** The x argument: description of the machine ***
+The machine description, the x argument to (;: y), is a list of boxes f;s;m;ijrd . m and ijrd may be omitted.
+** m, controlling conversion of the y argument **
+m controls the conversion of the items of y to column numbers. m may be:
+    * a list of boxes. The column number produced for an item of y is the index of the first box of m whose contents have an item equal to the item of y, or #m if there is no such box. Formally, the column numbers are (y (1 i.~ (e. >)"_ 0)"_1 _ m)
+    * (only if y is characters) a numeric list containing one column number for each ASCII character code. Each character of y is converted to the corresponding number of m.Formally, the column numbers are (a. i. y) { m).
+    * (only if y is a numeric list) m may be empty or omitted, and y specifies the column numbers directly.
+** ijrd, giving initial values for iteration variables **
+ijrd gives the initial values of 4 variables used by the sequential machine
+    * The input pointer i (default 0) is the index in y of the next item to be processed, and is incremented by 1 at the end of each iteration.
+    * The word pointer j (default _1) is the index in y of the first item in the current word. When the action code calls for producing output, the output will start with item j. When j is _1, there is no current word.
+    * The row number r (default 0) is used to index the row/action table.
+    * The final column d (default _1) is an extra column number that will be processed after the last item of y has been processed; it is the column for 'end-of-input'. If d is negative, no end-of-input column is processed.
+** s, the row/action table (aka state table or transition table) **
+s gives the row/action table. This table has as many rows as needed to encode all the states of the sequential machine, and as many columns as there are possible columns numbers of mapped input. Each 1-cell of s is a 2-element list, containing in order:
+    * the next state, the row number for the next iteration.
+    * the action code, a number from 0 to 7 indicating the action to be performed, with meanings as follows:
+      Action code Addition to output array                                                                                        Change to word pointer j
+                                                                                                                                  (after any addition to the output)
+      0           none                                                                                                            none
+      1           none                                                                                                            j =. i
+      2           add single word                                                                                                 j =. i
+      3           add single word                                                                                                 j =. _1
+      4           add multiple words                                                                                              j =. i
+      5           add multiple words                                                                                              j =. _1
+      6           stop--no further iterations are performed                                                                       none
+      7           backtrack--no output, but i is set so that the next iteration reprocesses the previous item of input (item i-1) none
+** f, indicating what the result contains **
+When the action code indicates that something should be added to the output, the value that is appended depends on the f parameter, which came from the x argument to (x ;: y) and the values of the iteration variables. The values appended for different values of f are (r=row number, c=column number, j=word pointer, i=input pointer):
+
+      f Value appended                                       Description
+      0 the items of y between j and i-1, boxed              Boxed word of y
+      1 the items of y between j and i-1                     Unboxed word of y
+      2 j , i-j                                              Index and length of word
+      3 c + r * number of columns in s                       Coded row and column
+        This can be written in J as (}:$s) #: r,c
+      4 j , (i-j) , c + r * number of columns in s           Index and length of word, and coded row and column
+        This can be written in J as j , (i-j), (}:$s) #: r,c
+      5 i , j, r , c , (<r,c){s                              Input pointer, word pointer, row, column, new row, action.
+                                                             When f is 5, one row is added to the output for each iteration, regardless of the action codes.
+The indicated data is appended to the output array whenever an 'add single word' action is executed.
+The 'add multiple words' action also adds the data, but coalesces multiple occurrences into a single added value. 'Add multiple words' actions are delayed, and consecutive ones from the same state are combined into a single word that is emitted only when the input string is exhausted, or a word is emitted from a different state.
+*** Running the Machine ***
+Execution of the state machine follows this program:
+NB. On input the variables i, j, r, and d have been set, the state table s and the
+NB. output format f have been extracted, the argument y has been converted into a
+NB. list of column numbers n, and the result has been initialized to a zero-item array
+NB. where the items have the proper shape for f.
+sq=:4 :0
+  'f s m ijrd' =. x,(#x)}.0;0;'';0 _1 0 _1 assert. 2 <: #x
+  'i j r d' =. ijrd
+  'pj pr' =. j,_1
+  if. 0 < L. m do. n =. (y i.~;m) { (#m),~(#&>m)#i.#m
+  elseif. ''-:m do. n =. y
+  elseif. do. n =. (a.i.y){m
+  end.
+  result=. f {:: (0#a:);'';i.&.>0 2;0;0 3;0 6
+  while. i <: #n do.
+    if. i = #n do.
+      if. d >: 0 do. 'newrow action' =. (<r,c =. d) { s
+      elseif. j = _1 do. break.
+      elseif. f = 5 do. break.  NB. Don't output final flush
+      elseif. do. 'newrow action' =. 0 5
+      end.
+    else. 'newrow action' =. (<r,c =. i { n) { s
+    end.
+    assert. newrow < #s
+    if. f = 5 do. result =. result , i, j, r, c, newrow, action end.
+    select. action
+      case. 0 do.
+      case. 6 do. break.
+      case. 7 do. i =. i-1 continue. NB. backtrack
+      fcase. 2;3;4;5 do. NB. emit
+        assert. j >: 0
+        if. f ~: 5 do.
+          ej=. ((r=pr)*action>3) { j,pj
+          select. f
+            case. 0 do. newdata =. < ej }. i {. y
+            case. 1 do. newdata =. ej }. i {. y
+            case. 2 do. newdata =. ej , i
+            case. 3 do. newdata =. (}:$s) #: r,c
+            case. 4 do. newdata =. ej , (i-ej) , (}:$s) #: r,c
+            case. do. Invalid output type' 13!:8 (1)
+          end.
+          if. (action <: 3)+.r~:pr do. result =. result , newdata
+          else. result =. newdata (<:#result)} result
+          end.
+        end.
+        if. r~:pr do. pj =. j end.
+        pr =. action {_1 _1 _1 _1,r,r
+      case. 1 do. j =. (action e. 1 2 4) { _1,i
+      case. do. 'Invalid action' 13!:8 (1)
+    end. NB. end of select. action
+    r =. newrow
+    i =. i + 1
+  end.
+  result
+)
+Notes:
+    * If no 'stop' action has been encountered, then after the last item of y has been processed, the end-of-input action is performed: if d is nonnegative, one last iteration is performed with d as the column number; otherwise, one final 'add multiple words' action is performed if j is not _1.
+    * Executing an 'emit' action when j is _1 produces a domain error.
+*** Example Of Use ***
+To illustrate the use of (x ;: y) we will build a machine to recognize C-style hex constants in character input, where a hex constant is '0x' followed by any positive number of hexadecimal digits.
+We see that the input characters are in 4 classes
+    * the character 0
+    * the character x
+    * the hexadecimal characters 0123456789abcdefABCDEF
+    * all other characters.
+We will assign these column numbers 3, 2, 1, and 0 respectively. The conversion control m can be generated by the statements
+   m =. a. e. '0x123456789abcdefABCDEF'
+   m =. m + a. e. '0x'
+   m =. m + a. e. '0'
+and can be verified by
+   (a. i. '0x2aq') { m
+3 2 1 1 0
+We can build the state table s now. There will be 4 rows. First, we wait for 0; then we expect x; then we expect a hexadecimal digit, signaling start-of-word if we see it; then we wait for a non-hexadecimal-digit, and output the word when we get one. The state table will look like this:
+                                           Newrow,Action     Newrow,Action     Newrow,Action     Newrow,Action
+      Row number Description of state      for input class 0 for input class 1 for input class 2 for input class 3
+                                           (other)           (hex digit)       (x)               (0)
+      0          Waiting for 0             0 0               0 0               0 0               1 1
+      1          Expecting x               0 0               0 0               2 0               0 0
+      2          Expecting first digit     0 0               3 0               0 0               3 0
+      3          Expecting nondigit or end 0 3               3 0               0 3               3 0
+This state table is generated by:
+   s =. 1 4 2 $ 0 0 0 0 0 0 1 1
+   s =. s , 4 2 $ 0 0 0 0 2 0 0 0
+   s =. s , 4 2 $ 0 0 3 0 0 0 3 0
+   s =. s , 4 2 $ 0 3 3 0 0 3 3 0
+and we use it with
+   (0;s;m;0 _1 0 0) ;: 'qqq0x30x30x40x0xxxx'
++----+----+
+|0x30|0x40|
++----+----+
+   (0;s;m;0 _1 0 0) ;: 'qqq0x30x30x40x0x34a'
++----+----+-----+
+|0x30|0x40|0x34a|
++----+----+-----+
+Note in the second example that 0x34a was emitted by the end-of-input action.
+**** Words, revisited ****
+The behavior of ;:y can be emulated, approximately (the monad can trigger open quote errors), using (0;sj;mj);:y where
+mj=: 256$0                     NB. X other
+mj=: 1 (9,a.i.' ')}mj          NB. S space and tab
+mj=: 2 (,(a.i.'Aa')+/i.26)}mj  NB. A A-Z a-z excluding N B
+mj=: 3 (a.i.'N')}mj            NB. N the letter N
+mj=: 4 (a.i.'B')}mj            NB. B the letter B
+mj=: 5 (a.i.'0123456789_')}mj  NB. 9 digits and _
+mj=: 6 (a.i.'.')}mj            NB. . the decimal point
+mj=: 7 (a.i.':')}mj            NB. : the colon
+mj=: 8 (a.i.'''')}mj           NB. Q quote
+mj=: 9 (a.i.'{')}mj            NB. { the left curly brace
+mj=:10 (10)} mj                NB. LF
+mj=:11 (a.i.'}')}mj            NB. } the right curly brace
+
+sj=: 0 10#:10*}.".;._2(0 :0)
+' X   S   A   N   B   9   .   :   Q    {    LF   }']0
+ 1.1 0.0 2.1 3.1 2.1 6.1 1.1 1.1 7.1 11.1 10.1 12.1 NB. 0 space
+ 1.2 0.3 2.2 3.2 2.2 6.2 1.0 1.0 7.2 11.2 10.2 12.2 NB. 1 other
+ 1.2 0.3 2.0 2.0 2.0 2.0 1.0 1.0 7.2 11.2 10.2 12.2 NB. 2 alp/num
+ 1.2 0.3 2.0 2.0 4.0 2.0 1.0 1.0 7.2 11.2 10.2 12.2 NB. 3 N
+ 1.2 0.3 2.0 2.0 2.0 2.0 5.0 1.0 7.2 11.2 10.2 12.2 NB. 4 NB
+ 9.0 9.0 9.0 9.0 9.0 9.0 1.0 1.0 9.0  9.0 10.2  9.0 NB. 5 NB.
+ 1.4 0.5 6.0 6.0 6.0 6.0 6.0 1.0 7.4 11.4 10.2 12.4 NB. 6 num
+ 7.0 7.0 7.0 7.0 7.0 7.0 7.0 7.0 8.0  7.0  7.0  7.0 NB. 7 '
+ 1.2 0.3 2.2 3.2 2.2 6.2 1.2 1.2 7.0 11.2 10.2 12.2 NB. 8 ''
+ 9.0 9.0 9.0 9.0 9.0 9.0 9.0 9.0 9.0  9.0 10.2  9.0 NB. 9 comment
+ 1.2 0.2 2.2 3.2 2.2 6.2 1.2 1.2 7.2 11.2 10.2 12.2 NB. 10 LF
+ 1.2 0.3 2.2 3.2 2.2 6.2 1.0 1.0 7.2 13.0 10.2  1.2 NB. 11 {
+ 1.2 0.3 2.2 3.2 2.2 6.2 1.0 1.0 7.2  1.2 10.2 14.0 NB. 12 }
+ 1.2 0.3 2.2 3.2 2.2 6.2 1.7 1.7 7.2  1.2 10.2  1.2 NB. 13 {{
+ 1.2 0.3 2.2 3.2 2.2 6.2 1.7 1.7 7.2  1.2 10.2  1.2 NB. 14 }}
+)
+FIXME: link to relevant point in j version history, once that has been published, for this version of the state table.
+**** More Information ****
+For detailed development of elementary examples, see: Vocabulary/SequentialMachineNotes and Generate_useful_tokens_from_input.
+Also explore the "Sequential Machine" and "Huffman Code" labs from the J session, in Help > Studio > Labs...
+in J6, the labs are found at Studio > Labs...
+in J8, the labs are found at Help > Studio > Labs...
+The entry_in_the_J_Dictionary for (;:) also contains useful examples to build the noun x to define your own Sequential Machine, including a complete definition equivalent to the monadic use of (;:) to tokenize a string of J code.
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+
+Retrieved from "https://code.jsoftware.com/mediawiki/index.php?title=Vocabulary/semico&oldid=29563"
+Category:
+    * Voc
+***** Navigation menu *****
+**** Personal tools ****
+    * Log_in
+**** Namespaces ****
+    * Page
+    * Discussion
+??
+**** Variants ****
+**** Views ****
+    * Read
+    * View_source
+    * View_history
+??
+**** More ****
+**** Search ****
+[Unknown INPUT type][Search][Go]
+**** Navigation ****
+    * New_Users
+    * Guides
+    * NuVoc
+    * System
+    * Showcase
+    * Library
+    * Community
+    * Recent_changes
+    * Random_page
+    * J_wiki_search
+**** Tools ****
+    * What_links_here
+    * Related_changes
+    * Special_pages
+    * Printable_version
+    * Permanent_link
+    * Page_information
+    * Cite_this_page
+    * This page was last edited on 22 November 2020, at 11:12.
+    * About_J_Wiki
+    * [Powered_by_MediaWiki]

@@ -1,0 +1,70 @@
+
+
+
+
+
+
+
+
+
+****** Vocabulary/gotodot ******
+From J Wiki
+< Vocabulary
+Jump to: navigation, search
+>> <<   Back_to:_Vocabulary Thru_to:_Dictionary
+      goto_lbl. Go to label Control
+      label_lbl. (target label) Control
+Valid only inside an explicit_definition.
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+Make the labelled statement the next statement to be executed
+f=: 3 : 0
+  if. y do. goto_true. else. goto_false. end.
+  label_true.  'true'  return.
+  label_false. 'false' return.
+)
+
+   f 0
+false
+
+   f 1
+true
+
+Retrieved from "https://code.jsoftware.com/mediawiki/index.php?title=Vocabulary/gotodot&oldid=27032"
+***** Navigation menu *****
+**** Personal tools ****
+    * Log_in
+**** Namespaces ****
+    * Page
+    * Discussion
+??
+**** Variants ****
+**** Views ****
+    * Read
+    * View_source
+    * View_history
+??
+**** More ****
+**** Search ****
+[Unknown INPUT type][Search][Go]
+**** Navigation ****
+    * New_Users
+    * Guides
+    * NuVoc
+    * System
+    * Showcase
+    * Library
+    * Community
+    * Recent_changes
+    * Random_page
+    * J_wiki_search
+**** Tools ****
+    * What_links_here
+    * Related_changes
+    * Special_pages
+    * Printable_version
+    * Permanent_link
+    * Page_information
+    * Cite_this_page
+    * This page was last edited on 25 September 2019, at 10:21.
+    * About_J_Wiki
+    * [Powered_by_MediaWiki]

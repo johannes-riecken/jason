@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8"/>
+<title>Vocabulary/atdot - J Wiki</title>
+<script>document.documentElement.className = document.documentElement.className.replace( /(^|\s)client-nojs(\s|$)/, "$1client-js$2" );</script>
+<script>(window.RLQ=window.RLQ||[]).push(function(){mw.config.set({"wgCanonicalNamespace":"","wgCanonicalSpecialPageName":false,"wgNamespaceNumber":0,"wgPageName":"Vocabulary/atdot","wgTitle":"Vocabulary/atdot","wgCurRevisionId":30417,"wgRevisionId":30417,"wgArticleId":3292,"wgIsArticle":true,"wgIsRedirect":false,"wgAction":"view","wgUserName":null,"wgUserGroups":["*"],"wgCategories":["Voc"],"wgBreakFrames":false,"wgPageContentLanguage":"en","wgPageContentModel":"wikitext","wgSeparatorTransformTable":["",""],"wgDigitTransformTable":["",""],"wgDefaultDateFormat":"dmy","wgMonthNames":["","January","February","March","April","May","June","July","August","September","October","November","December"],"wgMonthNamesShort":["","Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],"wgRelevantPageName":"Vocabulary/atdot","wgRelevantArticleId":3292,"wgRequestId":"d46aeaeff25627e49582c3d3","wgIsProbablyEditable":false,"wgRelevantPageIsProbablyEditable":false,"wgRestrictionEdit":[],"wgRestrictionMove":[],"wgCategoryTreePageCategoryOptions":"{\"mode\":0,\"hideprefix\":20,\"showcount\":true,\"namespaces\":false}","wgMediaViewerOnClick":true,"wgMediaViewerEnabledByDefault":true,"wgWikiEditorEnabledModules":[]});mw.loader.state({"site.styles":"ready","noscript":"ready","user.styles":"ready","user":"ready","site":"ready","user.options":"ready","user.tokens":"loading","mediawiki.legacy.shared":"ready","mediawiki.legacy.commonPrint":"ready","mediawiki.sectionAnchor":"ready","mediawiki.skinning.interface":"ready","skins.vector.styles":"ready"});mw.loader.implement("user.tokens@1sqk3u2",function($,jQuery,require,module){/*@nomin*/mw.user.tokens.set({"editToken":"+\\","patrolToken":"+\\","watchToken":"+\\","csrfToken":"+\\"});
+});mw.loader.load(["mediawiki.page.startup","mediawiki.user","mediawiki.hidpi","mediawiki.page.ready","mediawiki.searchSuggest","skins.vector.js"]);});</script>
+<link rel="stylesheet" href="/mediawiki/load.php?debug=false&amp;lang=en&amp;modules=mediawiki.legacy.commonPrint%2Cshared%7Cmediawiki.sectionAnchor%7Cmediawiki.skinning.interface%7Cskins.vector.styles&amp;only=styles&amp;skin=vector"/>
+<script async="" src="/mediawiki/load.php?debug=false&amp;lang=en&amp;modules=startup&amp;only=scripts&amp;skin=vector"></script>
+<meta name="ResourceLoaderDynamicStyles" content=""/>
+<link rel="stylesheet" href="/mediawiki/load.php?debug=false&amp;lang=en&amp;modules=site.styles&amp;only=styles&amp;skin=vector"/>
+<meta name="generator" content="MediaWiki 1.31.0"/>
+<link rel="shortcut icon" href="/favicon.ico"/>
+<link rel="search" type="application/opensearchdescription+xml" href="/mediawiki/opensearch_desc.php" title="J Wiki (en)"/>
+<link rel="EditURI" type="application/rsd+xml" href="https://code.jsoftware.com/mediawiki/api.php?action=rsd"/>
+<link rel="alternate" type="application/atom+xml" title="J Wiki Atom feed" href="/mediawiki/index.php?title=Special:RecentChanges&amp;feed=atom"/>
+<!--[if lt IE 9]><script src="/mediawiki/load.php?debug=false&amp;lang=en&amp;modules=html5shiv&amp;only=scripts&amp;skin=vector&amp;sync=1"></script><![endif]-->
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Vocabulary_atdot rootpage-Vocabulary skin-vector action-view">		<div id="mw-page-base" class="noprint"></div>
+		<div id="mw-head-base" class="noprint"></div>
+		<div id="content" class="mw-body" role="main">
+			<a id="top"></a>
+			<div class="mw-indicators mw-body-content">
+</div>
+<h1 id="firstHeading" class="firstHeading" lang="en">Vocabulary/atdot</h1>			<div id="bodyContent" class="mw-body-content">
+				<div id="siteSub" class="noprint">From J Wiki</div>				<div id="contentSub"><span class="subpages">&lt; <a href="/wiki/Vocabulary" class="mw-redirect" title="Vocabulary">Vocabulary</a></span></div>
+								<div id="jump-to-nav" class="mw-jump">
+					Jump to:					<a href="#mw-head">navigation</a>, 					<a href="#p-search">search</a>
+				</div>
+				<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr"><div class="mw-parser-output"><p><small>
+<a href="/wiki/Vocabulary/atco" title="Vocabulary/atco">&gt;&gt;</a>
+<a href="/wiki/Vocabulary/at" title="Vocabulary/at">&lt;&lt;</a> <tt>&#160;</tt>
+<a href="/wiki/NuVoc" title="NuVoc">Back to: Vocabulary</a>
+<a href="http://www.jsoftware.com/help/dictionary/d621.htm" class="extiw" title="jdic:d621">Thru to: Dictionary</a>
+</small>
+<span id="monadic"></span>
+</p>
+<dl><dd><table class="wikitable">
+
+<tbody><tr>
+<td style="background:#eeffcc; font-size: 18pt;"><tt>m@.n</tt>
+</td>
+<td style="font-weight: bold; font-size: 18pt;">Agenda
+</td>
+<td style="font-weight: bold; font-size: 18pt;">Conjunction
+</td></tr></tbody></table></dd></dl>
+<p><small> No rank - the result is a verb </small>
+</p>
+<hr />
+<p>(<tt>m@.n</tt>) creates the verb defined by the <tt>n</tt>-th atom from gerund <tt>m</tt>.
+</p>
+<pre>   m=: 0: ` 1: ` 2:   NB. a gerund of recognizable sample verbs
+   n=: 1
+   m@.n    NB. m@.n produces a verb
+1:
+   (m@.n) ''   NB. The verb can be executed
+1
+</pre>
+<hr />
+<h3><span class="mw-headline" id="More_Information">More Information</span></h3>
+<p>1. <tt>n</tt> may be negative to count back from the end of <tt>m</tt>.
+</p><p>2. If <tt>n</tt> is a list, a train of verbs is created from the selected items of <tt>m</tt>.
+</p>
+<pre>   m=: 0: ` 1: ` 2: ` 3:
+   m@.0 1
+0: 1:
+</pre>
+<p>3. If <tt>n</tt> is boxed, each level of boxing indicates a level of parentheses in the verb train
+</p>
+<pre>   m@.(0;&lt;1;&lt;2 3)
+0: (1: (2: 3:))
+</pre>
+<p>4. If only one atom of <tt>m</tt> is selected, the result of <tt>m@.n</tt> has the rank of the verb created from that atom.  If more than one atom of <tt>m</tt> is selected, the rank of the created train is infinite.
+</p>
+<hr />
+<dl><dd><table class="wikitable">
+
+<tbody><tr>
+<td style="background:#eeffcc; font-size: 18pt;"><tt>[x] m@.v y</tt>
+</td>
+<td style="font-weight: bold; font-size: 18pt;">Agenda
+</td>
+<td style="font-weight: bold; font-size: 18pt;">Conjunction
+</td></tr></tbody></table></dd></dl>
+<p><small>
+<a href="/wiki/Vocabulary/RankInfo#rankv" title="Vocabulary/RankInfo">Rank</a> <i>-- depends on the rank of v --</i>
+<a href="/wiki/Vocabulary/RankInfoIsImportant" title="Vocabulary/RankInfoIsImportant">WHY IS THIS IMPORTANT?</a>
+</small>
+</p><p><br />
+</p>
+<hr />
+<p><tt>[x] m@.v y</tt> executes <tt>[x] v y</tt> and uses the result to select an atom of the gerund <tt>m</tt>, which it then converts to a verb <tt>w</tt> and executes as <tt>[x] w y</tt> to produce the final result.
+</p>
+<pre>   NB. 3 different verbs
+   soso =: verb define
+smoutput 'Your score was ', ": y
+)
+   good =: verb define
+smoutput 'Your score was ', ": y
+smoutput 'Keep it up!'
+)
+   great =: verb define
+smoutput 'Your score was ', ": y
+smoutput 'That''s fantastic!'
+smoutput 'Would you like to try again?'
+)
+   NB. Choose them according to score: 7 or less, 8-9, 10
+   rate =: soso`good`great@.(7 9&amp;I.)
+   rate 4
+Your score was 4
+   rate 10
+Your score was 10
+That's fantastic!
+Would you like to try again?
+</pre>
+<hr />
+<h3><span class="mw-headline" id="Common_Uses">Common Uses</span></h3>
+<p>1. To get the effect of an <tt>if.</tt> statement, but with the ability to make the decision for each cell of the arguments.  Give <tt>v</tt> the appropriate rank.
+</p>
+<pre>   (+&amp;3)`(2&amp;*)@.(2&amp;|)"0 (1 2 3 4)   NB. Add 3 if even, multiply by 2 if odd - checking each atom separately
+2 5 6 7
+</pre>
+<p>2. To execute different verbs for zero/positive/negative.
+</p>
+<pre>   ('nil'"_)`(":)`('neg ' , ":@|)@.*"0  (_5 0 5)
+neg 5
+nil
+5
+</pre>
+<hr />
+<h3><span id="m@.v_on_Arrays"></span><span class="mw-headline" id="m.40.v_on_Arrays"><tt>m@.v</tt> on Arrays</span></h3>
+<p>Because execution of verbs at low rank is inefficient, <tt>u@.v</tt> executes at infinite rank but there is an underlying rank implied by <tt>m</tt> and <tt>v</tt>.
+</p><p>The <b>implied rank</b> of  <tt>m@.v y</tt> is the rank of <tt>y</tt> minus the rank of <tt>v y</tt>.  <tt>y</tt> is then split into cells of that rank, and the gerund from <tt>m</tt> is applied to the appropriate cells.  The gerund of <tt>m</tt> needs to be able to operate on a single cell of the implied rank, or an array of such cells, giving a result for each cell.  The results are assembled into the final result.
+</p>
+<pre>   +:`*:`-:@.(3&amp;|) i. 10
+0 1 1 6 16 2.5 12 49 4 18
+</pre>
+<p><tt>v y</tt> produces a list of 10 numbers, making the implied rank 0.  The verbs in <tt>m</tt> were applied on atoms or lists, and the results were assembled.
+</p>
+<pre>   +:`*:`-:@.((3&amp;|)@:(+/)"1) i. 5 10
+   0    2    4    6    8   10   12   14   16   18
+ 100  121  144  169  196  225  256  289  324  361
+  10 10.5   11 11.5   12 12.5   13 13.5   14 14.5
+  60   62   64   66   68   70   72   74   76   78
+1600 1681 1764 1849 1936 2025 2116 2209 2304 2401
+</pre>
+<p><tt>v y</tt> produces a list of 5 numbers, making the implied rank 1.  The verbs in <tt>m</tt> were applied on lists or tables, and the results were assembled.
+</p>
+<pre>   (+/"1)`(&lt;./"1)`(&gt;./"1)@.((3&amp;|)@:(+/)"1) i. 10 10
+45 10 29 345 40 59 645 70 89 945
+   ((3&amp;|)@:(+/)"1) i. 10 10
+0 1 2 0 1 2 0 1 2 0
+</pre>
+<p>The gerunds were applied to lists or tables.  The <tt>"1</tt> is necessary in each gerund to ensure that the gerund produces a result for each cell rather than a result for the array of cells it is applied to.
+</p>
+<h3><span class="mw-headline" id="Related_Primitives">Related Primitives</span></h3>
+<p><a href="/wiki/Vocabulary/hatco" title="Vocabulary/hatco">Power</a> (<tt>[x] u^:v y</tt>)
+</p>
+<hr />
+<h3><span class="mw-headline" id="More_Information_2">More Information</span></h3>
+<p>1. Verb trains cannot be created when <tt>v</tt> is a verb.
+</p><p>2. Negative selections count back from the end of <tt>m</tt>.
+</p>
+<hr />
+<h3><span class="mw-headline" id="Use_These_Combinations">Use These Combinations</span></h3>
+<p>Combinations using <tt>[x] u@.v y</tt> that have <a href="/wiki/Vocabulary/SpecialCombinations" title="Vocabulary/SpecialCombinations">exceptionally good performance</a> include:
+</p>
+<dl><dd><table class="wikitable">
+
+<tbody><tr>
+<td style="text-align:center;"><b>What it does</b>
+</td>
+<td style="text-align:center;"><b>Type;<br />
+</b><p><b>Precisions;<br />
+Ranks</b>
+</p>
+</td>
+<td style="text-align:center;"><b><a href="/wiki/Vocabulary/SpecialCombinations#1" title="Vocabulary/SpecialCombinations">Syntax</a></b>
+</td>
+<td style="text-align:center;"><b>Variants;<br />
+</b><p><b>Restrictions</b>
+</p>
+</td>
+<td><b>Benefits;<br />
+</b><p><b>Bug Warnings</b>
+</p>
+</td></tr>
+<tr>
+<td style="text-align:center;">Fast agenda
+</td>
+<td style="text-align:center;">
+</td>
+<td style="text-align:center;"><tt>f0</tt>...<tt>fn@.v"0 y</tt>
+</td>
+<td style="text-align:center;">All <tt>f's</tt> must be <a href="/wiki/Vocabulary/SpecialCombinations#2" title="Vocabulary/SpecialCombinations">atomic</a>.<br />
+<p>If <tt>v</tt> has rank <tt>0</tt> then <tt>"0</tt> can be omitted
+</p>
+</td>
+<td>
+</td></tr></tbody></table></dd></dl>
+<hr />
+
+<!-- 
+NewPP limit report
+Cached time: 20210812091104
+Cache expiry: 86400
+Dynamic content: false
+CPU time usage: 0.012 seconds
+Real time usage: 0.013 seconds
+Preprocessor visited node count: 109/1000000
+Preprocessor generated node count: 220/1000000
+Post‐expand include size: 164/2097152 bytes
+Template argument size: 0/2097152 bytes
+Highest expansion depth: 2/40
+Expensive parser function count: 0/100
+Unstrip recursion depth: 0/20
+Unstrip post‐expand size: 1492/5000000 bytes
+-->
+<!--
+Transclusion expansion time report (%,ms,calls,template)
+100.00%    1.222      1 Vocabulary/rankv
+100.00%    1.222      1 -total
+-->
+</div>
+<!-- Saved in parser cache with key my_wiki:pcache:idhash:3292-0!canonical and timestamp 20210812091104 and revision id 30417
+ -->
+</div>					<div class="printfooter">
+						Retrieved from "<a dir="ltr" href="https://code.jsoftware.com/mediawiki/index.php?title=Vocabulary/atdot&amp;oldid=30417">https://code.jsoftware.com/mediawiki/index.php?title=Vocabulary/atdot&amp;oldid=30417</a>"					</div>
+				<div id="catlinks" class="catlinks" data-mw="interface"><div id="mw-normal-catlinks" class="mw-normal-catlinks"><a href="/wiki/Special:Categories" title="Special:Categories">Category</a>: <ul><li><a href="/mediawiki/index.php?title=Category:Voc&amp;action=edit&amp;redlink=1" class="new" title="Category:Voc (page does not exist)">Voc</a></li></ul></div></div>				<div class="visualClear"></div>
+							</div>
+		</div>
+		<div id="mw-navigation">
+			<h2>Navigation menu</h2>
+			<div id="mw-head">
+									<div id="p-personal" role="navigation" class="" aria-labelledby="p-personal-label">
+						<h3 id="p-personal-label">Personal tools</h3>
+						<ul>
+							<li id="pt-login"><a href="/mediawiki/index.php?title=Special:UserLogin&amp;returnto=Vocabulary%2Fatdot" title="You are encouraged to log in; however, it is not mandatory [o]" accesskey="o">Log in</a></li>						</ul>
+					</div>
+									<div id="left-navigation">
+										<div id="p-namespaces" role="navigation" class="vectorTabs" aria-labelledby="p-namespaces-label">
+						<h3 id="p-namespaces-label">Namespaces</h3>
+						<ul>
+							<li id="ca-nstab-main" class="selected"><span><a href="/wiki/Vocabulary/atdot" title="View the content page [c]" accesskey="c">Page</a></span></li><li id="ca-talk" class="new"><span><a href="/mediawiki/index.php?title=Talk:Vocabulary/atdot&amp;action=edit&amp;redlink=1" rel="discussion" title="Discussion about the content page (page does not exist) [t]" accesskey="t">Discussion</a></span></li>						</ul>
+					</div>
+										<div id="p-variants" role="navigation" class="vectorMenu emptyPortlet" aria-labelledby="p-variants-label">
+												<input type="checkbox" class="vectorMenuCheckbox" aria-labelledby="p-variants-label" />
+						<h3 id="p-variants-label">
+							<span>Variants</span>
+						</h3>
+						<div class="menu">
+							<ul>
+															</ul>
+						</div>
+					</div>
+									</div>
+				<div id="right-navigation">
+										<div id="p-views" role="navigation" class="vectorTabs" aria-labelledby="p-views-label">
+						<h3 id="p-views-label">Views</h3>
+						<ul>
+							<li id="ca-view" class="collapsible selected"><span><a href="/wiki/Vocabulary/atdot">Read</a></span></li><li id="ca-viewsource" class="collapsible"><span><a href="/mediawiki/index.php?title=Vocabulary/atdot&amp;action=edit" title="This page is protected.&#10;You can view its source [e]" accesskey="e">View source</a></span></li><li id="ca-history" class="collapsible"><span><a href="/mediawiki/index.php?title=Vocabulary/atdot&amp;action=history" title="Past revisions of this page [h]" accesskey="h">View history</a></span></li>						</ul>
+					</div>
+										<div id="p-cactions" role="navigation" class="vectorMenu emptyPortlet" aria-labelledby="p-cactions-label">
+						<input type="checkbox" class="vectorMenuCheckbox" aria-labelledby="p-cactions-label" />
+						<h3 id="p-cactions-label"><span>More</span></h3>
+						<div class="menu">
+							<ul>
+															</ul>
+						</div>
+					</div>
+										<div id="p-search" role="search">
+						<h3>
+							<label for="searchInput">Search</label>
+						</h3>
+						<form action="/mediawiki/index.php" id="searchform">
+							<div id="simpleSearch">
+								<input type="search" name="search" placeholder="Search J Wiki" title="Search J Wiki [f]" accesskey="f" id="searchInput"/><input type="hidden" value="Special:Search" name="title"/><input type="submit" name="fulltext" value="Search" title="Search the pages for this text" id="mw-searchButton" class="searchButton mw-fallbackSearchButton"/><input type="submit" name="go" value="Go" title="Go to a page with this exact name if it exists" id="searchButton" class="searchButton"/>							</div>
+						</form>
+					</div>
+									</div>
+			</div>
+			<div id="mw-panel">
+				<div id="p-logo" role="banner"><a class="mw-wiki-logo" href="/wiki/Main_Page"  title="Visit the main page"></a></div>
+						<div class="portal" role="navigation" id="p-navigation" aria-labelledby="p-navigation-label">
+			<h3 id="p-navigation-label">Navigation</h3>
+			<div class="body">
+								<ul>
+					<li id="n-New-Users"><a href="/wiki/Guides/GettingStarted">New Users</a></li><li id="n-Guides"><a href="/wiki/Guides">Guides</a></li><li id="n-NuVoc"><a href="/wiki/NuVoc">NuVoc</a></li><li id="n-System"><a href="/wiki/System">System</a></li><li id="n-Showcase"><a href="/wiki/Showcase">Showcase</a></li><li id="n-Library"><a href="/wiki/Library">Library</a></li><li id="n-Community"><a href="/wiki/Community">Community</a></li><li id="n-Recent-changes"><a href="/wiki/Special:RecentChanges">Recent changes</a></li><li id="n-Random-page"><a href="/wiki/Special:Random">Random page</a></li><li id="n-J-wiki-search"><a href="/wiki/Special:JwikiSearch">J wiki search</a></li>				</ul>
+							</div>
+		</div>
+			<div class="portal" role="navigation" id="p-tb" aria-labelledby="p-tb-label">
+			<h3 id="p-tb-label">Tools</h3>
+			<div class="body">
+								<ul>
+					<li id="t-whatlinkshere"><a href="/wiki/Special:WhatLinksHere/Vocabulary/atdot" title="A list of all wiki pages that link here [j]" accesskey="j">What links here</a></li><li id="t-recentchangeslinked"><a href="/wiki/Special:RecentChangesLinked/Vocabulary/atdot" rel="nofollow" title="Recent changes in pages linked from this page [k]" accesskey="k">Related changes</a></li><li id="t-specialpages"><a href="/wiki/Special:SpecialPages" title="A list of all special pages [q]" accesskey="q">Special pages</a></li><li id="t-print"><a href="/mediawiki/index.php?title=Vocabulary/atdot&amp;printable=yes" rel="alternate" title="Printable version of this page [p]" accesskey="p">Printable version</a></li><li id="t-permalink"><a href="/mediawiki/index.php?title=Vocabulary/atdot&amp;oldid=30417" title="Permanent link to this revision of the page">Permanent link</a></li><li id="t-info"><a href="/mediawiki/index.php?title=Vocabulary/atdot&amp;action=info" title="More information about this page">Page information</a></li><li id="t-cite"><a href="/mediawiki/index.php?title=Special:CiteThisPage&amp;page=Vocabulary%2Fatdot&amp;id=30417" title="Information on how to cite this page">Cite this page</a></li>				</ul>
+							</div>
+		</div>
+				</div>
+		</div>
+				<div id="footer" role="contentinfo">
+						<ul id="footer-info">
+								<li id="footer-info-lastmod"> This page was last edited on 24 March 2021, at 21:12.</li>
+							</ul>
+						<ul id="footer-places">
+								<li id="footer-places-about"><a href="/wiki/About" title="About">About J Wiki</a></li>
+							</ul>
+										<ul id="footer-icons" class="noprint">
+										<li id="footer-poweredbyico">
+						<a href="//www.mediawiki.org/"><img src="/mediawiki/resources/assets/poweredby_mediawiki_88x31.png" alt="Powered by MediaWiki" srcset="/mediawiki/resources/assets/poweredby_mediawiki_132x47.png 1.5x, /mediawiki/resources/assets/poweredby_mediawiki_176x62.png 2x" width="88" height="31"/></a>					</li>
+									</ul>
+						<div style="clear: both;"></div>
+		</div>
+		<script>(window.RLQ=window.RLQ||[]).push(function(){mw.config.set({"wgPageParseReport":{"limitreport":{"cputime":"0.012","walltime":"0.013","ppvisitednodes":{"value":109,"limit":1000000},"ppgeneratednodes":{"value":220,"limit":1000000},"postexpandincludesize":{"value":164,"limit":2097152},"templateargumentsize":{"value":0,"limit":2097152},"expansiondepth":{"value":2,"limit":40},"expensivefunctioncount":{"value":0,"limit":100},"unstrip-depth":{"value":0,"limit":20},"unstrip-size":{"value":1492,"limit":5000000},"timingprofile":["100.00%    1.222      1 Vocabulary/rankv","100.00%    1.222      1 -total"]},"cachereport":{"timestamp":"20210812091104","ttl":86400,"transientcontent":false}}});});</script><script>(window.RLQ=window.RLQ||[]).push(function(){mw.config.set({"wgBackendResponseTime":25});});</script>
+	</body>
+</html>

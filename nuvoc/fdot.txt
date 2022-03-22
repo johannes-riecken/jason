@@ -1,0 +1,201 @@
+
+
+
+
+
+
+
+
+
+****** Vocabulary/fdot ******
+From J Wiki
+< Vocabulary
+Jump to: navigation, search
+>> <<   Down_to:_Dyad   Back_to:_Vocabulary Thru_to:_Dictionary
+      u f. Fix Adverb
+Rank -- depends on the rank of u -- WHY_IS_THIS_IMPORTANT?
+
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+Fixes tacit_verb u (i.e. gives it a fixed value without name dependencies) by replacing each name in u with the fixed value of the name.
+So even if names refer to other names, the fixed form contains nothing but J primitives.
+The name Fix is inherited from the APL language, where an analogous system function {quad}FX ("Fix") turns a function definition (expressed as a character matrix) into an APL function.
+   sum=: +/
+   count=: #
+   by=: %
+
+   mean=: sum by count
+   mean
+sum by count
+   mean f.
++/ % #
+If x is a literal noun containing the name of an entity (rather than a verb as in the example above), the result is similar, with all names encountered in the definition of the item named by x replaced by their fixed values. The result in this case has the same part of speech as the value named by x
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+**** Common uses ****
+1. To reduce the number of public names used in a verb definition.
+Consider the following lines in a script:
+   '`sum count by log' =: +/ ` # ` % ` ^.  NB. Same verbs as above, assigned quickly
+   mean =: sum by count
+   gmean =: mean&.:log                     NB. Geometric mean
+   gmean
+mean&.:log
+   mean
+sum by count
+Suppose that gmean is the only definition you really need to be public. Unfortunately, the other names must also be public, polluting the common namespace, because gmean refers to them.
+You can fix this:
+   '`sum count by log' =. +/ ` # ` % ` ^.  NB. Use private assignment for temporary names
+   mean =. sum by count
+   gmean =: mean&.:log f.                  NB. f. makes temporary names go away.  Assign gmean publicly
+   gmean                                   NB. All the names are gone
+(+/ % #)&.:^.
+Because these lines are in a script, the names assigned privately (using =.) disappear after the script has loaded, leaving only the name gmean publicly assigned.
+2. To pass a private verb into a modifier.
+   a =: adverb define
+u y
+)
+   vb =: verb define
+pv =. *:    NB. private verb
+pv a y   NB. pass pv into a, execute (pv a) on y
+)
+   vb 5
+|value error: pv
+The problem is that pv is defined in the private namespace of vb and is not visible to a. The solution is to replace the name pv by its value using (f.)
+       u y
+   vb =: verb define
+pv =. *:    NB. private verb
+pv f. a y   NB. create the name-free verb value for pv, pass THAT to a
+)
+   vb 5
+25
+3. To create special_code_combinations unrecognised by J because some J code was assigned to a name
+   ts =: 6!:2 , 7!:2@]     NB. Verb to find the time and space used by a sentence
+
+   a =: 1000 1000 ?@$ 0    NB. create 1 million random values
+   ts 'plus/@enfile a'     NB. the worst of times
+0.322007 8.39059e6
+   ts 'plus/@enfile f. a'  NB. the best of times
+0.00179939 4736
+4. To execute a verb in another locale without changing the current locale
+This is part of J's standard Object-Oriented Programming (OOP) support
+   coclass 'parent'
+NB. Create object.  y is the name to give the object
+   create =: verb define
+objname =: y
+)
+
+   coclass 'child'    NB. child class
+   coinsert 'parent'
+NB. Create object.  y is the name to give the object
+create =: verb define
+create_parent_ y
+)
+
+   coclass 'base'     NB. Back to main session
+   NB. Create two objects
+   obj1 =: 'object one' conew 'child'
+   obj2 =: 'object two' conew 'child'
+   NB. Verify obj names are what we set
+   objname__obj1      NB. Unexpected result...
+object two
+   objname__obj2
+object two
+The error is subtle, in the line
+create_parent_ y
+Executing a locative changes the implied locale before executing the verb. So create_parent_ was run in the locale: parent for both objects.
+The solution is even more subtle. It uses f. to call create_parent_
+   coclass 'child'
+NB. Create object.  y is the name to give the object
+create =: verb define
+create_parent_ f. y
+)
+   coclass 'base'      NB. Back to main session
+   obj1 =: 'object one' conew 'child'
+   obj2 =: 'object two' conew 'child'
+   objname__obj1       NB. Better
+object one
+   objname__obj2
+object two
+
+   create_parent_ f.   NB. 'create_parent_ f.' is not a locative
+3 : 'objname=:y'
+The key point is that create_parent_ f. is not a locative. The locative has been replaced by the value of the name, and executing that value does not change the implied locale, so objname is created in the instance locale.
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+**** More Information ****
+1. u f. does not replace names inside the body of an explicit_definition.
+We can redo the mean example using mostly explicit definitions
+   sum =: verb define
++/ y
+)
+   by =: %
+   count =: verb define
+# y
+)
+   mean =: sum by count
+   gmean =: verb define
+mean &.:^. y
+)
+   gmean f.
+3 : 'mean&.:^.y'
+The name mean in the body of the explicit definition was not altered.
+   mean
+sum by count
+   mean f.
+3 : '+/y' % 3 : '#y'
+Fixing mean replaces names by their definitions, but it doesn't go inside the body of an explicit definition.
+2.  u f. scans u for special code combinations after replacing names.
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+**** Details ****
+1. If a name is referenced recursively, it will remain after fixing
+   a =: b
+   b =: a + c
+   c =: %
+   a f.
+a + %
+2. The interpreter may find it necessary to introduce explicit definitions to limit the scope of a recursion ($:):
+      z =. $:@:<:^:*
+   x =. 10 + z
+   x f.
+10 + 3 : '$:@:<:^:*y' :(4 : 'x$:@:<:^:*y')
+3. When the names x y u v m n are used during execution of the body of an explicit definition, they are replaced by their value (even if their value is not a noun), because their meaning changes depending on which private namespace is in use. This replacement does not fix the name (as in  u f.) but merely replaces it with its value, which may be another name.
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+
+Retrieved from "https://code.jsoftware.com/mediawiki/index.php?title=Vocabulary/fdot&oldid=17513"
+Category:
+    * Voc
+***** Navigation menu *****
+**** Personal tools ****
+    * Log_in
+**** Namespaces ****
+    * Page
+    * Discussion
+??
+**** Variants ****
+**** Views ****
+    * Read
+    * View_source
+    * View_history
+??
+**** More ****
+**** Search ****
+[Unknown INPUT type][Search][Go]
+**** Navigation ****
+    * New_Users
+    * Guides
+    * NuVoc
+    * System
+    * Showcase
+    * Library
+    * Community
+    * Recent_changes
+    * Random_page
+    * J_wiki_search
+**** Tools ****
+    * What_links_here
+    * Related_changes
+    * Special_pages
+    * Printable_version
+    * Permanent_link
+    * Page_information
+    * Cite_this_page
+    * This page was last edited on 16 March 2016, at 02:56.
+    * About_J_Wiki
+    * [Powered_by_MediaWiki]

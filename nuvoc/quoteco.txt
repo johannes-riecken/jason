@@ -1,0 +1,333 @@
+
+
+
+
+
+
+
+
+
+****** Vocabulary/quoteco ******
+From J Wiki
+< Vocabulary
+Jump to: navigation, search
+>> <<   Down_to:_Dyad   Back_to:_Vocabulary Thru_to:_Dictionary
+      ": y Default Format
+Rank_Infinity -- operates on x and y as a whole -- WHY_IS_THIS_IMPORTANT?
+
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+Converts y to an array of bytes, converting non-character types to displayable form.
+If y is already bytes, then ":y is the same as y.
+   ] y=: 1 2 3 ; 4 5 6
++-----+-----+
+|1 2 3|4 5 6|
++-----+-----+
+   ]z=: ": y
++-----+-----+
+|1 2 3|4 5 6|
++-----+-----+
+   $ z
+3 13
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+**** Common uses ****
+1. Embed a number n in an output message
+which needs n to be in string form
+   n=: 99.5
+   smoutput 'Time taken: ' , (":n) , ' seconds'
+Time taken: 99.5 seconds
+Note: The verb nb (which hinges on the use of ":) gives an easy way to make output messages
+   nb =: (;:^:_1) @: (":&.>)
+   smoutput nb 'Time taken:';99.5;'seconds'
+Time taken: 99.5 seconds
+2. Convert numbers to string form so they can be written to a file
+   ]list =. 3 1 4 1 5 9
+3 1 4 1 5 9
+   ": list
+3 1 4 1 5 9
+5!:5 <'list' is a more general way to create the string form of a noun: list .
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+**** More Information ****
+1. For more complex formatting using a format string to specify particular behavior, e.g. for negative numbers, or character insertion, like commas in a long number, see foreign_8!:0.
+2. You don't need to bother with the rank of y because ": has infinite rank. It automatically puts spaces within boxes and between numbers to line up everything correctly. It does this no matter how many axes y has. As a general rule, what you would see in the J session window is what you get in the result.
+3. A box gets formatted as a byte table whose border uses the box-drawing characters set by Vocabulary/Foreigns#m9 (9!:7). The contents of the box are formatted as a list or table. If the rank of the contents exceeds 2, the contents are converted to a table by adding a blank row between the last cell of each axis and the following cell 0 for that axis.
+4. Each 2-cell of y becomes a 2-cell of the result of  ":y .
+5. If y is non-empty and boxed with rank less than 2,  ":y is a table.
+6. If y is empty or not boxed, and has rank less than 2,  ":y is a list.
+7. Each number in y is formatted independently. If the number is complex, its real and imaginary parts are formatted independently.
+8. Each character noun in y is formatted using Unicode (8&u:"1). This will leave byte precisions unchanged, but convert any unicodes to UTF-8 encoding. It may also add framing_fill, if 1-cells have varying lengths after UTF-8 encoding.
+9. The horizontal and vertical alignment for the contents of boxed y is set by Vocabulary/Foreigns#m9 (9!:17) and used as described for phrase (x ": y).
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+**** Boxed y ****
+When y is boxed, the contents of each box is formatted into a table of characters, and the contents of the boxes are separated by box-drawing_characters to produce a ruled display.
+The boxing characters produce a pleasant ruled display only when they are viewed with a monospace font, such as Courier New.
+*** UTF-8 characters in boxes ***
+When boxes contain non-ASCII byte strings, these strings are interpreted as UTF-8. ". y performs the following steps:
+1. If any string contains non-ASCII characters, it is converted to Unicode characters.
+If the rank of y is greater than 1, each list of y is converted independently and the results assembled into an array.
+2. If any string contains Unicode characters, either because the string started as Unicode or because it was converted to Unicode in step 1, all characters are converted to Unicode precision.
+3. Boxing characters are installed, with the assumption that each character will occupy one space on the display
+4. If the array has Unicode precision, it is converted back to byte precision, with each non-ASCII character represented as a multibyte UTF-8 sequence.
+Because the lines of the Unicode array produced by step 2 may contain different numbers of non-ASCII characters, the final step of conversion back to byte precision may introduce spaces at the ends of lines. These spaces are required to produce a valid J result, since J does not support ragged arrays.
+*** CJK (Chinese/Japanese/Korean) characters ***
+Unicode characters for East Asian languages (referred to as Chinese/Japanese/Korean or CJK) require a special font for proper boxed display. Unifont is one such font. A suitable font must:
+1. support two widths of character (called fullwidth and halfwidth in the Unicode documents)
+2. define each fullwidth character to be exactly twice as wide as each halfwidth character
+3. define the boxing characters as halfwidth characters
+4. give each character the proper width as defined by the Unicode_standard
+With a suitable font installed, boxed CJK characters will display correctly in their boxes.
+Support for CJK characters inserts one extra step into the processing flow given above:
+2a. Each fullwidth CJK character has a NUL character (U+0000) appended following the CJK character. Since the NUL character has no display, and the fullwidth character takes two display positions, the pair of characters takes a pair of display positions, and the internal array including the boxing characters does not require fill.
+The added NUL characters are removed during the conversion of the Unicode characters to UTF-8-encoded bytes. If the original characters included NUL characters following fullwidth characters, those original NUL characters will be removed; if you need to keep them, you must duplicate the NUL character.
+**** Details ****
+1. The print precision d is the number of digits of significance that will be displayed by  ": y. By default it is the value set by (9!:11), initially 6, but it may be overridden by using the form  ":!.d.
+2. The format for each number is specified in terms of the field specifiers used by x_":_y:
+                                                            Field Specifier Used For Numbers
+         Type   Magnitude                                                    Field Specifier
+               Integer                                                                  0
+      Floating  < 0.0001                       0 j. -d (scientific notation with d significant digits)
+         or     > 0.0001  0 j. 0 >. d - >. 10 ^.value (decimal notation, with a total of d significant digits)
+       Complex   < 10^d
+                 >: 10^d                      0 j. -d) (scientific notation with d-1 fractional digits)
+3. Regardless of the field specifier, trailing zeros below the decimal point, and the decimal point itself if there are no nonzero decimal places, are omitted.
+4. Box-drawing characters selected from the set specified by (9!:7) are placed around the contents of each box
+      tohex =: [: ,"2 ' ' (,"1) '0123456789ABCDEF' {~ 16 16 #: a. i. ]  NB. display in hex
+   9!:6''               NB. Using the special boxing characters
++++++++++|-
+   tohex 9!:6 ''        NB. This is their hex form
+ 10 11 12 13 14 15 16 17 18 19 1A
+   tohex ": 5 ; 'abc'   NB. displayable form is 3x6 array of bytes
+ 10 1A 11 1A 1A 1A 12
+ 19 35 19 61 62 63 19
+ 16 1A 17 1A 1A 1A 18
+Here 35 represents 5, 61 62 63 represents abc, and the rest are box-drawing characters. The byte indexes 10-1A (hex) used above are special values that are translated_to_Unicode_during_display.
+If you want to set your own boxing characters, use  9!:7 y where y is a list of precisely 11 bytes. This sets the box-drawing characters.
+                                                         The meaning of the bytes in 9!:7 y
+      Index         Meaning    Index          Meaning     Index           Meaning     Index       Meaning
+         0  Top left corner +     3         Left tee +       6  Bottom left corner +     9   Vertical bar |
+         1        Top tee +       4  4-way intersection +    7        Bottom tee +      10  Horizontal bar -
+         2  Top right corner +    5        Right tee +       8  Bottom right corner +
+5. When y is a sparse_array, ": y is a table of characters with one row for each atom that is stored in the array. The row contains the index list of the atom, followed by |, followed by the value of the atom.
+   ": %: $. i. 3 3   NB. Note that the atom at (0 0) is not stored
+0 1 |       1
+0 2 | 1.41421
+1 0 | 1.73205
+1 1 |       2
+1 2 | 2.23607
+2 0 | 2.44949
+2 1 | 2.64575
+2 2 | 2.82843
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+**** Use These Combinations ****
+Combinations using  ": y that have exceptionally_good_performance include:
+                                                                         Type;                            Variants;     Benefits;
+                               What it does                           Precisions;         Syntax        Restrictions    Bug Warnings
+                                                                         Ranks
+      Convert an integer to a numeric list of digits Boolean, integer, extended integer "."0@": y @: & &: in place of @ fastest way, especially for extended integers
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+      x ": y Format
+Rank_1__ -- operates on lists of x and the entirety of y, with replication of atomic x -- WHY_IS_THIS_IMPORTANT?
+
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+Converts y to a byte array formatted according to the specification x
+y must be numeric or boxed
+   ]y=: 2 2 $ 23.567 123456.23 _32.4 0.00347
+23.567  123456
+ _32.4 0.00347
+   NB. --formatting looks capricious
+
+   x=: 6j2 11j_5   NB. this format spec has an atom for each column of y
+
+   x ": y
+ 23.57 1.23456e5
+_32.40 3.47000e_3
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+**** Common Uses ****
+1. Convert a number to a precise format
+   10j2 ": 6
+      6.00
+2. Force scientific notation to appear
+   10j_2 ": 654000
+ 6.54e5
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+**** More Information ****
+***** Contents *****
+    * 1_Common_uses
+    * 2_More_Information
+    * 3_Boxed_y
+          o 3.1_UTF-8_characters_in_boxes
+          o 3.2_CJK_(Chinese/Japanese/Korean)_characters
+    * 4_Details
+    * 5_Use_These_Combinations
+    * 6_Common_Uses
+    * 7_More_Information
+          o 7.1_Numeric_y
+          o 7.2_Boxed_y
+    * 8_Oddities
+*** Numeric y ***
+Let y be as follows:
+   ] y=: 2 3 $ _3.56e5 6 _1  0.56789 0 1.56e_5
+_356000 6      _1
+0.56789 0 1.56e_5
+1. Each atom of x is a field specifier for the corresponding atom in each 1-cell of y
+   7 5j1 8j3 ": y
+_356000  6.0  _1.000
+      1  0.0   0.000
+If x is a single atom it is used to format every atom of y
+This may result in the fractional part of some numbers getting dropped
+   7 ": y
+_356000      6     _1
+      1      0      0
+2. The field specifier is a complex number (in the general case):
+      Real part:      w field width    at least the total characters occupied by the number in its field (with any (-) or (.))
+      Imaginary part: d decimal places the fixed number of decimal places to show, for every number
+   12j3 ": y
+ _356000.000       6.000      _1.000
+       0.568       0.000       0.000
+WARNING: No space is automatically skipped between fields.
+3. If either w or d above is negative, the number is displayed using J's own form of scientific notation, e.g. _1.234e_4
+The absolute values of w and d are what get used for formatting.
+   12j_3 ": y    NB. need to guess appropriate field width
+_3.560e5     6.000e0    _1.000e0
+ 5.679e_1    0.000e0     1.560e_5
+4. If the field width is 0, the field is made just wide enough to display the value, including
+    * the sign if negative
+    * the digits before the decimal point
+    * the decimal point, if the number of decimal places is not 0
+    * the decimal places
+    * the exponent and its optional sign (if x asks for scientific notation)
+    * a space, if there is another number following
+   0j3 ": y     NB. auto calculates minimum field width required
+_356000.000 6.000 _1.000
+      0.568 0.000  0.000
+The largest width needed at a given index in the 1-cell is used as the width for all numbers at that index.
+5. If the field is too narrow for a given number (i.e. to hold its entire integer part), the entire field fills with asterisks.
+   6 ": y       NB. not enough room in field
+******     6    _1
+     1     0     0
+6. If y is complex, the imaginary part is ignored.
+   ]z=: y + 0j999
+_356000j999 6j999      _1j999
+0.56789j999 0j999 1.56e_5j999
+
+   0j_3 ": z
+_3.560e5 6.000e0 _1.000e0
+ 5.679e_ 0.000e0  1.560e_
+7. Alternative ways to format numbers:
+    * the 8!:n verbs
+    * the printf addon
+*** Boxed y ***
+1. x is an atom, or a list 1 or 2 atoms, giving the alignment of box-contents. If only one value is given, 0 is used for the second atom.
+      Alignment specified by x when y is boxed
+        First atom of x     Second atom of x
+      0          top                 left
+      1       center                center
+      2       bottom                right
+   ]a =. 2 2 $ 'a';'b';'c';3 3$'*'   NB. A boxed array default left/top
++-+---+
+|a|b  |
++-+---+
+|c|***|
+| |***|
+| |***|
++-+---+
+   1 ": a                            NB. Display with alignment center/left
++-+---+
+|a|b  |
++-+---+
+| |***|
+|c|***|
+| |***|
++-+---+
+   1 2 ": a                          NB. Display with alignment center/right
+
++-+---+
+|a|  b|
++-+---+
+| |***|
+|c|***|
+| |***|
++-+---+
+2. The contents of each box of y are formatted using Default_Format (": y), except that the alignment specified by x is used at all levels of boxing.
+   ]a =. 2 2 $ 123456789000 ; 0.00000000001 ; (<'b') ; <('+++';'+'),:'a';3 3 $ '*'   NB. default top/left
++----------+---------+
+|1.23457e11|1e_11    |
++----------+---------+
+|+-+       |+---+---+|
+||b|       ||+++|+  ||
+|+-+       |+---+---+|
+|          ||a  |***||
+|          ||   |***||
+|          ||   |***||
+|          |+---+---+|
++----------+---------+
+   2 1 ": a    NB. bottom/center
++----------+---------+
+|1.23457e11|  1e_11  |
++----------+---------+
+|          |+---+---+|
+|          ||+++| + ||
+|          |+---+---+|
+|          ||   |***||
+|   +-+    ||   |***||
+|   |b|    || a |***||
+|   +-+    |+---+---+|
++----------+---------+
+   1 2 ": a    NB. center/right
++----------+---------+
+|1.23457e11|    1e_11|
++----------+---------+
+|          |+---+---+|
+|          ||+++|  +||
+|       +-+|+---+---+|
+|       |b|||   |***||
+|       +-+||  a|***||
+|          ||   |***||
+|          |+---+---+|
++----------+---------+
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+**** Oddities ****
+1. If y is empty, its type still determines what values of x are permitted.
+This is not an error but it is unusual for J to do this sort of thing.
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+
+Retrieved from "https://code.jsoftware.com/mediawiki/index.php?title=Vocabulary/quoteco&oldid=28242"
+Category:
+    * Voc
+***** Navigation menu *****
+**** Personal tools ****
+    * Log_in
+**** Namespaces ****
+    * Page
+    * Discussion
+??
+**** Variants ****
+**** Views ****
+    * Read
+    * View_source
+    * View_history
+??
+**** More ****
+**** Search ****
+[Unknown INPUT type][Search][Go]
+**** Navigation ****
+    * New_Users
+    * Guides
+    * NuVoc
+    * System
+    * Showcase
+    * Library
+    * Community
+    * Recent_changes
+    * Random_page
+    * J_wiki_search
+**** Tools ****
+    * What_links_here
+    * Related_changes
+    * Special_pages
+    * Printable_version
+    * Permanent_link
+    * Page_information
+    * Cite_this_page
+    * This page was last edited on 24 March 2020, at 03:47.
+    * About_J_Wiki
+    * [Powered_by_MediaWiki]

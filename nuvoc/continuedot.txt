@@ -1,0 +1,64 @@
+
+
+
+
+
+
+
+
+
+****** Vocabulary/continuedot ******
+From J Wiki
+< Vocabulary
+Jump to: navigation, search
+>> <<   Back_to:_Vocabulary Thru_to:_Dictionary
+      continue. Terminate iteration Control
+Valid only inside an explicit_definition.
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+Stops executing any further sentences in the given block during the current iteration, but continues with the next iteration.
+Use within the block delimited byâ¦
+    * for._..._end.
+    * for_ijk._..._end.
+    * while._..._end.
+    * whilst._..._end.
+To understand the difference between (break.) and (continue.) see More Information in Terminate_loop (break.).
+
+Retrieved from "https://code.jsoftware.com/mediawiki/index.php?title=Vocabulary/continuedot&oldid=27042"
+***** Navigation menu *****
+**** Personal tools ****
+    * Log_in
+**** Namespaces ****
+    * Page
+    * Discussion
+??
+**** Variants ****
+**** Views ****
+    * Read
+    * View_source
+    * View_history
+??
+**** More ****
+**** Search ****
+[Unknown INPUT type][Search][Go]
+**** Navigation ****
+    * New_Users
+    * Guides
+    * NuVoc
+    * System
+    * Showcase
+    * Library
+    * Community
+    * Recent_changes
+    * Random_page
+    * J_wiki_search
+**** Tools ****
+    * What_links_here
+    * Related_changes
+    * Special_pages
+    * Printable_version
+    * Permanent_link
+    * Page_information
+    * Cite_this_page
+    * This page was last edited on 25 September 2019, at 10:38.
+    * About_J_Wiki
+    * [Powered_by_MediaWiki]

@@ -1,0 +1,95 @@
+
+
+
+
+
+
+
+
+
+****** Vocabulary/throwdot ******
+From J Wiki
+< Vocabulary
+Jump to: navigation, search
+>> <<   Back_to:_Vocabulary Thru_to:_Dictionary
+      throw. Execute throw Control
+Valid only inside an explicit_definition.
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+Causes execution to resume after catcht. in a higher-level function.
+throw. terminates the current explicit definition with an uncaught throw. error. Execution resumes in the caller:
+   1. If the caller is executing in a try. control that has a catcht., the error is cleared and execution continues at the line following the catcht.
+   2. Otherwise, the caller terminates with the uncaught throw. error, and execution continues in its caller, continuing the search for an active catcht. . Calling functions are terminated one by one until catcht. is encountered.
+If no calling function contains an active catcht., J returns to immediate mode with the uncaught throw. error.
+throw. may be thought of as a special type of error that is not intercepted by catch. or u_::_v.
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+**** Common Uses ****
+1. Return a noun from sub without signalling an error and execute a given B-block in its caller: main
+main=: 3 : 0   NB. calls: sub
+ try.
+  sub y
+ catcht.
+  select. type_jthrow_
+   case. 'aaaa' do. 'throw aaaa'
+   case. 'bbb'  do. 'throw bbb'
+   case. 'cc'   do. 'throw cc'
+   case.        do. throw.   NB. handled by a higher-level catcht. (if any)
+  end.
+ end.
+)
+
+sub=: 3 : 0
+ if. y<0 do. type_jthrow_=: 'aaaa' throw. end.
+ if. y<4 do. type_jthrow_=: 'bbb'  throw. end.
+ if. y<8 do. type_jthrow_=: 'cc'   throw. end.
+ (":y),' not thrown'
+)
+
+   main _4
+throw aaaa
+   main 1
+throw bbb
+   main 5
+throw cc
+   main 88
+88 not thrown
+NOTE: throw. can communicate information back to its target catcht.. via a global name in a given locale, e.g. type_jthrow_ above.
+
+Retrieved from "https://code.jsoftware.com/mediawiki/index.php?title=Vocabulary/throwdot&oldid=27200"
+***** Navigation menu *****
+**** Personal tools ****
+    * Log_in
+**** Namespaces ****
+    * Page
+    * Discussion
+??
+**** Variants ****
+**** Views ****
+    * Read
+    * View_source
+    * View_history
+??
+**** More ****
+**** Search ****
+[Unknown INPUT type][Search][Go]
+**** Navigation ****
+    * New_Users
+    * Guides
+    * NuVoc
+    * System
+    * Showcase
+    * Library
+    * Community
+    * Recent_changes
+    * Random_page
+    * J_wiki_search
+**** Tools ****
+    * What_links_here
+    * Related_changes
+    * Special_pages
+    * Printable_version
+    * Permanent_link
+    * Page_information
+    * Cite_this_page
+    * This page was last edited on 24 October 2019, at 14:18.
+    * About_J_Wiki
+    * [Powered_by_MediaWiki]

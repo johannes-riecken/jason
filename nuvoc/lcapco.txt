@@ -1,0 +1,309 @@
+
+
+
+
+
+
+
+
+
+****** Vocabulary/lcapco ******
+From J Wiki
+< Vocabulary
+Jump to: navigation, search
+>> <<   Back_to:_Vocabulary Thru_to:_Dictionary
+      [x] u L: n y Level At Conjunction
+Rank_Infinity -- operates on [x and] y as a whole -- WHY_IS_THIS_IMPORTANT?
+
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+(u L:0 y) creates a copy of y in which each leaf has been replaced by the result of applying u to the leaf.
+A leaf of y is a noun inside y that itself has no nested contents.
+A leaf is either empty or unboxed.
+   NB. The leaves are 'abc', 'de', 4 5, and i. 6
+   ]a =. (<<'abc'),(<(<'de'),(<4 5)),(<<<i. 6)
++-----+--------+---------------+
+|+---+|+--+---+|+-------------+|
+||abc|||de|4 5|||+-----------+||
+|+---+|+--+---+|||0 1 2 3 4 5|||
+|     |        ||+-----------+||
+|     |        |+-------------+|
++-----+--------+---------------+
+   $L:0 a       NB. Replace each leaf by its shape
++---+-----+-----+
+|+-+|+-+-+|+---+|
+||3|||2|2|||+-+||
+|+-+|+-+-+|||6|||
+|   |     ||+-+||
+|   |     |+---+|
++---+-----+-----+
+   |.L:0 a v    NB. Reverse each leaf
++-----+--------+---------------+
+|+---+|+--+---+|+-------------+|
+||cba|||ed|5 4|||+-----------+||
+|+---+|+--+---+|||5 4 3 2 1 0|||
+|     |        ||+-----------+||
+|     |        |+-------------+|
++-----+--------+---------------+
+More generally...
+Every atom of a boxed noun can contain another boxed noun, each atom of which can contain another, and so on, creating a hierarchy of boxing in which each box has a position with respect to higher levels of boxing, and a boxing_level of the contents telling how many levels of boxing hierarchy are within the box.
+The boxing level of unboxed contents is 0.
+(u L: n) forms a new verb which applies verb u to the contents of each box whose contents have boxing level n.
+The result of u replaces the contents it was applied to, but keeping the same position in the boxing hierarchy.
+This definition is accurate only when each box in y has contents with the same boxing level. See below for the general_case.
+   ] y=: (<0 1),(<(<'ab'),(<2 3)),(<(<0),(<1),<<4 5)
++---+--------+-----------+
+|0 1|+--+---+|+-+-+-----+|
+|   ||ab|2 3|||0|1|+---+||
+|   |+--+---+|| | ||4 5|||
+|   |        || | |+---+||
+|   |        |+-+-+-----+|
++---+--------+-----------+
+   |.L:0 y
++---+--------+-----------+
+|1 0|+--+---+|+-+-+-----+|
+|   ||ba|3 2|||0|1|+---+||
+|   |+--+---+|| | ||5 4|||
+|   |        || | |+---+||
+|   |        |+-+-+-----+|
++---+--------+-----------+
+   |.L:1 y
++---+--------+-----------+
+|1 0|+---+--+|+-+-+-----+|
+|   ||2 3|ab|||0|1|+---+||
+|   |+---+--+|| | ||4 5|||
+|   |        || | |+---+||
+|   |        |+-+-+-----+|
++---+--------+-----------+
+Contrast this with Spread (S:), which returns an array whose items are the results of applying u to the various contents.
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+**** Common uses ****
+1. Apply verb u to the leaves (innermost unboxed items) of a boxed noun y
+   ] y=: 'alpha' ; 'bravo' ;'charlie'
++-----+-----+-------+
+|alpha|bravo|charlie|
++-----+-----+-------+
+   toupper L:0 y
++-----+-----+-------+
+|ALPHA|BRAVO|CHARLIE|
++-----+-----+-------+
+Tip: Use leaf as a mnemonic for  L:0
+   leaf
+L:0
+   toupper leaf y
++-----+-----+-------+
+|ALPHA|BRAVO|CHARLIE|
++-----+-----+-------+
+leaf is a
+    * Standard_Library word(s) residing in the 'z'-locale
+    * Defined in the factory script stdlib.ijs which is located in  ~system/main/stdlib.ijs
+    * View the definition(s) in a JQt session by entering:  open '~system/main/stdlib.ijs'
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+**** Related Primitives ****
+Level_Of (L. y), Spread (u S: n)
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+**** More Information ****
+1. The boxing_level is specified with 3 numbers representing monadic and dyadic values, just as for rank.
+2. The number (n) may be negative, in which case the value used for n is the given value plus the boxing_level of the argument, but never less than 0.
+   ]a =: <,<2$<,'abc'  NB. A noun
++-----------+
+|+---------+|
+||+---+---+||
+|||abc|abc|||
+||+---+---+||
+|+---------+|
++-----------+
+   L. a                NB. Boxing level 3
+3
+   $L:0 a
++-------+
+|+-----+|
+||+-+-+||
+|||3|3|||
+||+-+-+||
+|+-----+|
++-------+
+   $L:_3 a             NB. same as L:0
++-------+
+|+-----+|
+||+-+-+||
+|||3|3|||
+||+-+-+||
+|+-----+|
++-------+
+   $L:1 a
++---+
+|+-+|
+||2||
+|+-+|
++---+
+   $L:_2 a             NB. same as L:1
++---+
+|+-+|
+||2||
+|+-+|
++---+
+3. A positive value of n means "apply u on contents that are n levels above the leaves".
+But a negative value of n does not mean "apply u at levels -n down from the top". Even for negative n, the operation is based on distance from the leaves
+   ]a =: (<<'abc')
++-----+
+|+---+|
+||abc||
+|+---+|
++-----+
+   |.L:_2 a  NB. L:_2 same as L:0
++-----+
+|+---+|
+||cba||
+|+---+|
++-----+
+   ]b =: (<<'abc'),(<<<0 1 2)
++-----+---------+
+|+---+|+-------+|
+||abc|||+-----+||
+|+---+|||0 1 2|||
+|     ||+-----+||
+|     |+-------+|
++-----+---------+
+   |.L:_2 b  NB. Now L:_2 same as L:1.  abc is at level 0
++-----+---------+
+|+---+|+-------+|
+||abc|||+-----+||
+|+---+|||0 1 2|||
+|     ||+-----+||
+|     |+-------+|
++-----+---------+
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+**** Details ****
+Executing  u L: n involves examining each box and (provided the contents of the box have the right boxing_level) executing u&.> on the box. This guarantees that the boxing hierarchy stays unchanged above the level at which u is applied.
+If n is greater than or equal to the boxing_level of the argument(s), u is applied on the entire argument(s); otherwise the boxes are opened one by one and recursively processed. This is described in detail below.
+We start with the monadic case; the dyadic is slightly more elaborate.
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+*** Monadic L: ***
+1. The absolute level an is calculated. It is simple n unless n is negative, in which case it is  0 <. n + L. y (i.e. n plus the boxing_level of y, but never less than 0). an never changes during the remainder of the processing.
+2. Level y is executed, performing the function.
+The recursive verb Level is defined as follows. It takes one argument, y.
+1. If the boxing_level of y is less than or equal to an, the result of Level y is  u y.
+2. Otherwise, recursion is performed by opening each atom of y and executing Level on the contents.
+I.e. the result of Level y is  Level&.> y.
+Every time a box of y is opened for recursion, the boxing_level of the contents drops by at least 1.
+This guarantees the recursion will terminate. But an atom of y may have a boxing level less that that of the entire y. This means that opening a box may reduce the boxing level by more than 1
+   ]c =: (<'abc';1 2 3),(<(<'def'),(<0 1 2;4 5))
++-----------+-----------------+
+|+---+-----+|+---+-----------+|
+||abc|1 2 3|||def|+-----+---+||
+|+---+-----+||   ||0 1 2|4 5|||
+|           ||   |+-----+---+||
+|           |+---+-----------+|
++-----------+-----------------+
+   |.L:1 c
++-----------+-----------------+
+|+-----+---+|+---+-----------+|
+||1 2 3|abc|||fed|+---+-----+||
+|+-----+---+||   ||4 5|0 1 2|||
+|           ||   |+---+-----+||
+|           |+---+-----------+|
++-----------+-----------------+
+The question to ponder is: Why did applying |. at level 1 reverse def, which is obviously a leaf at level 0?
+The answer is that the larger sub-argument, of which def was a part, was this:
++---+-----------+
+|def|+-----+---+|
+|   ||0 1 2|4 5||
+|   |+-----+---+|
++---+-----------+
+This noun has level 2, so u cannot be applied to it. Each box is opened and processed, and the boxing level of the first atom skips from 2 to 0, at which point u is applied.
+Similarly:
+   |.L:2 c
++-----------+-----------------+
+|+-----+---+|+-----------+---+|
+||1 2 3|abc|||+-----+---+|def||
+|+-----+---+|||0 1 2|4 5||   ||
+|           ||+-----+---+|   ||
+|           |+-----------+---+|
++-----------+-----------------+
+The first box, whose contents are at level 1, is reversed because |. is applied as soon as the box is opened.
+The rule to remember is that the boxes of y are opened from the top down, and u is applied when an opened contents is within an levels of the leaves.
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+*** Dyadic L: ***
+The processing of  x u L: n y is like  u L: n y with these added features
+    * n can give different levels for x and y
+    * u is executed only when both level requirements are met
+          o the result is boxed to match the deeper-boxed argument
+    * if the arguments for recursion do not have the same shape, they follow the rules for cell_replication with verb rank 0 0
+1. The absolute levels anx and any are calculated, as for the monadic_case. anx and any never change during the remainder of the processing.
+2. x Level y is executed, performing the function.
+The recursive verb Level is defined as follows. It takes two arguments, x and y.
+1. If each argument is less than or equal to its absolute level, the result of x Level y is  x u y.
+2. Otherwise, recursion is performed. a. If only one argument is less than or equal to its absolute level, that argument is boxed.
+This adds one to its boxing level, which has the effect of 'marking time' as it waits for the other operand to reach its absolute boxing level.
+b. Whether or not step (a) was executed, the atoms of x and y are matched and Level is executed on the opened contents.
+I.e. the result of  x Level y is  x Level&.> y.
+   ]x =: <'abc';'def'
++---------+
+|+---+---+|
+||abc|def||
+|+---+---+|
++---------+
+   ]y =: 'AB';('CD';'EFG');<(<2 2$'HIJ';'K')
++--+--------+---------+
+|AB|+--+---+|+-------+|
+|  ||CD|EFG|||+---+-+||
+|  |+--+---+|||HIJ|K|||
+|  |        ||+---+-+||
+|  |        |||HIJ|K|||
+|  |        ||+---+-+||
+|  |        |+-------+|
++--+--------+---------+
+   x ,L:0 y
++-------------+--------------+-----------------------------+
+|+-----+-----+|+-----+------+|+-------------+-------------+|
+||abcAB|defAB|||abcCD|defEFG|||+------+----+|+------+----+||
+|+-----+-----+|+-----+------+|||abcHIJ|abcK|||defHIJ|defK|||
+|             |              ||+------+----+|+------+----+||
+|             |              |||abcHIJ|abcK|||defHIJ|defK|||
+|             |              ||+------+----+|+------+----+||
+|             |              |+-------------+-------------+|
++-------------+--------------+-----------------------------+
+This follows the rules given above.
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+
+Retrieved from "https://code.jsoftware.com/mediawiki/index.php?title=Vocabulary/lcapco&oldid=28849"
+Category:
+    * Voc
+***** Navigation menu *****
+**** Personal tools ****
+    * Log_in
+**** Namespaces ****
+    * Page
+    * Discussion
+??
+**** Variants ****
+**** Views ****
+    * Read
+    * View_source
+    * View_history
+??
+**** More ****
+**** Search ****
+[Unknown INPUT type][Search][Go]
+**** Navigation ****
+    * New_Users
+    * Guides
+    * NuVoc
+    * System
+    * Showcase
+    * Library
+    * Community
+    * Recent_changes
+    * Random_page
+    * J_wiki_search
+**** Tools ****
+    * What_links_here
+    * Related_changes
+    * Special_pages
+    * Printable_version
+    * Permanent_link
+    * Page_information
+    * Cite_this_page
+    * This page was last edited on 18 July 2020, at 13:34.
+    * About_J_Wiki
+    * [Powered_by_MediaWiki]

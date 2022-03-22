@@ -1,0 +1,69 @@
+
+
+
+
+
+
+
+
+
+****** Vocabulary/trydot ******
+From J Wiki
+< Vocabulary
+Jump to: navigation, search
+>> <<   Back_to:_Vocabulary Thru_to:_Dictionary
+      try.    Execute with error path
+      catch.  Error path                        Control
+      catchd. Error path only if not debugging
+      catcht. Catch throw. from called function
+Valid only inside an explicit_definition.
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+You put sentences into a try. structure when you want to recover if they fail. If there is an error in the block following try., the try. is aborted and control passes to the catch./catchd., with catchd. being ignored if debugging is on. catcht. is a special case that picks up the special error case created by a throw. control word. As with other control structures, end. terminates the try. structure.
+try. executes the try. block, which is the sentences following the try. up to the first catch./catcht./catchd.. If the try. block completes without error, execution continues after the end.. If an error is encountered, control passes to one of the catch blocks:
+   1. If the error is uncaught throw., in other words if throw. was executed in a called function and has not already been intercepted, and there is a catcht. block in the current try.structure, control passes to the first sentence of the catcht. block and the error is reset.
+   2. Otherwise, if there is a catch. block, control passes to the first sentence of the catch. block and the error is reset.
+   3. Otherwise, if there is a catchd. block and debugging_has_not_been_turned_on, control passes to the first sentence of the catchd. block and the error is reset.
+catchd. is used for code that provides a general-purpose error handler whose purpose is to catch errors and keep going. If you want to debug one of those errors, you turn on the debugger and then the catchd. has no effect, and your program will stop at the error so that you can look around.
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+
+Retrieved from "https://code.jsoftware.com/mediawiki/index.php?title=Vocabulary/trydot&oldid=27638"
+Category:
+    * WorkInProgress
+***** Navigation menu *****
+**** Personal tools ****
+    * Log_in
+**** Namespaces ****
+    * Page
+    * Discussion
+??
+**** Variants ****
+**** Views ****
+    * Read
+    * View_source
+    * View_history
+??
+**** More ****
+**** Search ****
+[Unknown INPUT type][Search][Go]
+**** Navigation ****
+    * New_Users
+    * Guides
+    * NuVoc
+    * System
+    * Showcase
+    * Library
+    * Community
+    * Recent_changes
+    * Random_page
+    * J_wiki_search
+**** Tools ****
+    * What_links_here
+    * Related_changes
+    * Special_pages
+    * Printable_version
+    * Permanent_link
+    * Page_information
+    * Cite_this_page
+    * This page was last edited on 31 December 2019, at 01:29.
+    * About_J_Wiki
+    * [Powered_by_MediaWiki]

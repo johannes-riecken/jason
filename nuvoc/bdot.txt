@@ -1,0 +1,161 @@
+
+
+
+
+
+
+
+
+
+****** Vocabulary/bdot ******
+From J Wiki
+< Vocabulary
+Jump to: navigation, search
+>> <<   Back_to:_Vocabulary Thru_to:_Dictionary
+      (m b.) y x (m b.) y Boolean/Bitwise/Bitwise Shift Adverb
+Rank_Infinity -- operates on [x and] y as a whole -- WHY_IS_THIS_IMPORTANT?
+
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+Creates a verb to perform logic on the bit(s) of y (and x, if present).
+The operand m (an integer) selects the appropriate logic to apply, according to this table:
+      For m ... The value of x must fit in: The value of y must fit in: Action
+      _16 to _1 boolean                     boolean                     (same as m+16)
+      0 to 15   boolean                     boolean                     logical function: x F y
+      16 to 31  integer                     integer                     bitwise logical function: x L y
+      32        integer                     integer                     left-rotate bits of y by x positions
+      33        integer                     integer                     (unsigned) left-shift bits of y by x positions
+      34        integer                     integer                     (signed) left-shift bits of y by x positions
+Notes on the above table:
+    *     o (monad) (m b.)y is the same as (dyad) x(m b.)y with x=0
+          o To shift (or rotate) right instead of left, use a negative value for x
+          o Left shift fills the vacated positions with 0
+          o (Unsigned) right shift fills the vacated positions with 0
+          o (Signed) right shift fills the vacated positions by the value (0|1) of the sign bit.
+Examples:
+1. Create the logical function of x and y which has its truth table encoded by the number m=2
+   xandnoty =: 2 b.         NB. m=2 gives logical function: (x and not-y)
+   0 1 0 1 xandnoty 0 0 1 1
+0 1 0 0
+Note: To encode the truth table t into an integer m, ravel t and treat it as a binary numeral
+   ] t=: 2 2 $ 0 0 1 0      NB. sample truth table: (x and not-y)
+0 0
+1 0
+
+   ] m=: #. , t             NB. encode truth table t into an integer m
+2
+
+   ] m=: 2b0010             NB. or write m directly in base 2
+2
+
+   ] m=: 2b10010            NB. add 16 for the bitwise verbs
+18
+Note: To verify the truth table corresponding to a given choice of integer m, use table to show truth table of the created logical function
+   xandnoty =: m b.         NB. create corresponding logical fn
+
+   0 1 xandnoty table 0 1
++--------+---+
+|xandnoty|0 1|
++--------+---+
+|0       |0 0|
+|1       |1 0|
++--------+---+
+table is a
+    * Standard_Library word(s) residing in the 'z'-locale
+    * Defined in the factory script stdlib.ijs which is located in  ~system/main/stdlib.ijs
+    * View the definition(s) in a JQt session by entering:  open '~system/main/stdlib.ijs'
+2 Create a bitwise logical function (here, x and not-y) that independently combines corresponding bits of x and y
+   xandnotybw =: 18 b.              NB. (m=16+2) same as (m=2) but combines integers x and y bitwise
+   showbin =: '01' {~ (32#2)&#:     NB. verb to display (list of) integers as (table of) bits
+
+   showbin 12 5 , (12 xandnotybw 5)
+00000000000000000000000000001100
+00000000000000000000000000000101
+00000000000000000000000000001000
+3. Create a verb to perform rotate left or shift left on the bits of integer y
+   y=: _12345                       NB. non-trivial bit pattern with sign-bit set to 1
+   showbin y , 4 (32 b.) y          NB. (m=32) - rotate left 4 places
+11111111111111111100111111000111
+11111111111111001111110001111111
+   showbin y , _4 (33 b.) y         NB. (m=33) unsigned shift-right 4 places
+11111111111111111100111111000111
+00001111111111111111110011111100
+   showbin y , _4 (34 b.) y         NB. signed shift-right 4 places
+11111111111111111100111111000111
+11111111111111111111110011111100
+Note: shift-right 4 places is: shift-left _4 places.
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+**** Common Uses ****
+1. Model logical functions given their truth tables.
+2. Find the largest power of 2 that divides a given number, e.g. 448
+   (17 b. -) 448                    NB. y BITWISE_AND (-y) gives the required result
+64
+3. Implement CRC polynomials using bit-shifting.
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+**** More Information ****
+1. Every logical function has an equivalent J primitive.
+      m  Equivalent  m  Equivalent  m   Equivalent  m    Equivalent
+      0       0"0    4      x < y   8  x +: y (NOR) 12       -. x
+      1 x *. y (AND) 5         y    9  x = y (XNOR) 13      x <: y
+      2      x > y   6 x ~: y (XOR) 10       -. y   14 x *: y (NAND)
+      3         x    7 x +. y (OR)  11     x >: y   15        1"0
+Note: the primitive equivalents are faster than (m b.)
+2. Operand m may be an array, in which case each result cell will be the array of the results of the logical functions specified by m.
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+**** Use These Combinations ****
+Combinations using  b. y that have exceptionally_good_performance include:
+                                                    Type;                                                        Variants;            Benefits;
+                            What it does         Precisions;             Syntax                                 Restrictions          Bug Warnings
+                                                    Ranks
+               Integer reductions on infixes        integer         x (17 b.)/\ y    also (22 b.) (23 b.) (25 b.) in place of (17 b.) much faster than alternatives
+             Integer reductions on partitions       integer        x (17 b.)//. y       (22 b.) (23 b.) (25 b.) in place of (17 b.)   avoids building argument cells
+           Polynomial Multiplication (bitwise)      integer  x (22 b.)//.@(17 b./) y                                                  avoids building argument cells
+            Bitwise reductions along diagonals      integer          (17 b.)//. y             (22 b.) (23 b.) in place of (17 b.)     avoids building argument cells
+      Integer [quotient/]remainder of power of 2    integer               x | y                           with x a power of 2         If x is positive, (-x) 17 b. y is better to get remainder
+                  Bitwise reduction and scan        integer          x (m b.)/ y                          /\ /\. in place of /        much faster than alternatives
+                                                                    m is 16 to 31
+                                                                     u&.(a.&i.) y                             (u y) -: u"0 y
+                 Bitwise operations on bytes          byte      (m b.)/&.(a.&i.) y                             m is 16 to 31          avoids conversion to integer
+                                                                x (m b.)&.(a.&i.) y
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+
+Retrieved from "https://code.jsoftware.com/mediawiki/index.php?title=Vocabulary/bdot&oldid=30410"
+Category:
+    * Voc
+***** Navigation menu *****
+**** Personal tools ****
+    * Log_in
+**** Namespaces ****
+    * Page
+    * Discussion
+??
+**** Variants ****
+**** Views ****
+    * Read
+    * View_source
+    * View_history
+??
+**** More ****
+**** Search ****
+[Unknown INPUT type][Search][Go]
+**** Navigation ****
+    * New_Users
+    * Guides
+    * NuVoc
+    * System
+    * Showcase
+    * Library
+    * Community
+    * Recent_changes
+    * Random_page
+    * J_wiki_search
+**** Tools ****
+    * What_links_here
+    * Related_changes
+    * Special_pages
+    * Printable_version
+    * Permanent_link
+    * Page_information
+    * Cite_this_page
+    * This page was last edited on 22 March 2021, at 23:11.
+    * About_J_Wiki
+    * [Powered_by_MediaWiki]

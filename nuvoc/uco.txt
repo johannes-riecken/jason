@@ -1,0 +1,196 @@
+
+
+
+
+
+
+
+
+
+****** Vocabulary/uco ******
+From J Wiki
+< Vocabulary
+Jump to: navigation, search
+>> <<   Down_to:_Dyad   Back_to:_Vocabulary Thru_to:_Dictionary
+      u: y Unicode
+Rank_Infinity -- operates on x and y as a whole -- WHY_IS_THIS_IMPORTANT?
+
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+The unicode character corresponding to y.
+If y is a number,  u: y returns the unicode_character having y as its unicode_code_point_(UCP).
+   y=: 16b03c0   NB. The UCP: U+03C0 of the symbol: Ï
+   u: y
+Ï
+If y is a character,  u: y converts y to unicode precision.
+If y is already unicode characters,  u: y is the same as y. If y is bytes, each byte is extended with high-order zeros to unicode precision. This does not change the meaning of ASCII characters, because the ASCII standard is embedded in the Unicode standard, thus the character 'A' is ASCII character number 41 (hex) and the UCP for 'A' is U+0041.
+   ] z=: u: y
+Ï
+   datatype z
+unicode
+   3!:0 z
+131072
+   NB. Compare with...
+   3!:0 'A'
+2
+   3!:0 (65)
+4
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+**** Common uses ****
+1. Display the character with UCP: 960
+   u: 960   NB. (mathematical) pi
+Ï
+2. Make a unicode atom of UCP: 960
+   #$ pi=: u: 960
+0
+   datatype pi
+unicode
+
+   ] z=: 'C=2' , pi , 'r'
+C=2Ïr
+   datatype z
+unicode
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+**** More Information ****
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+*** Character Precisions ***
+The character type comprises 3 precisions: byte_precision, unicode_precision, and unicode4_precision.
+An atom with byte precision has one of the 256 different byte values, which are all listed in the primitive noun a. .
+    * Byte indexes 0-127 are the ASCII characters (described by the ASCII_standard).
+    * Byte indexes 128-255 do not correspond to characters, but are used for representing data in byte form (as when interacting with external hardware and software).
+In other words, byte precision has two different uses:
+    * to represent ASCII characters
+    * to hold general 8-bit data.
+An atom with unicode_precision, also known as a wide character or a 16-bit character, is a unicode character, i.e. a character described by the Unicode_standard in the range U+0000 to U+FFFF.
+An atom with unicode4_precision, also known as a 4-byte character, is a unicode character, i.e. a character described by the Unicode_standard in the range U+0000 to U+10FFFF. Unicode4 characters can encode all the characters in Chinese/Japanese/Korean (CJK) character sets.
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+*** UTF-8 encoding ***
+UTF-8 is a widely used method of encoding Unicode characters in a list of bytes.
+Taking advantage of the fact that there are 256 byte values, only 128 of which are used by ASCII, it assigns meaning to the other 128 byte values and encodes each non-ASCII Unicode character in a string of bytes.
+UTF-8 is not a character precision in J. It is an encoding scheme for nouns having the precision: byte.
+J's only support for UTF-8 is to support conversion between UTF-8 bytes and the J precisions byte and unicode. See table below.
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+*** Examples ***
+1. Display characters represented in the (obsolescent) Latin 1 standard.
+Example: consider the French word: 'Ã§a'. On pre-Unicode platforms (e.g. Windows XP) this would be stored with a single byte for each character, i.e. as two Latin 1 codes in byte precision: (231 97).
+   u: 231 97  NB. unicode characters display correctly
+Ã§a
+   231 97 { a.   NB. non-ASCII bytes do not display
+ï¿½a
+   231 97 { u:a.
+Ã§a
+   u: 231 97 { a.
+Ã§a
+2. Use in tacit verbs in conjunction with dyadic (u:)
+    * If y is characters, u:y is equivalent to 2 u: y
+    * If y is numbers, u:y is equivalent to 4 u: y
+3. If y is a number, it must be in the range _65536 to 65535, and the UCP will be (65536 | y).
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+**** Details ****
+1. y may have any rank. The shape of u: y is the same as the shape of y.
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+      x u: y Unicode
+Rank_Infinity -- operates on x and y as a whole -- WHY_IS_THIS_IMPORTANT?
+
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+Converts between numbers, character precisions and encodings according to the Unicode and UTF-8 standards.
+                                                                                                                                                                                                                     x u: y functions
+                                                                                 Type/                                                       Type/
+                                                 Description                x  Precision                                                   Precision                                                                                                                Action
+                                                                               of Result                                                      of y
+                                Truncate to byte precision (ouch!)          1     byte                                                         byte                   Leave unchanged
+                                                                                                                                   unicode or unicode4                Discard upper bits
+                                                                                                                                               byte                   Extend with high-order 0 bits
+                              Convert to unicode (2-byte) precision         2   unicode                                                     unicode                   Leave unchanged
+                                                                                                                                            unicod4                   Discard 2 high bytes
+                                            Convert to integer              3   integer                                                        byte                   Convert to byte number (index in a.)
+                                                                                                                                   unicode or unicode4                Convert to number of UCP
+                                               UCP to unicode               4   unicode                                        integer in (-65536,65535)              Create unicode character whose UCP is y
+                                       Shrink to byte precision             5     byte                                                         byte                   Leave unchanged
+                                                                                                                                            unicode                   Discard upper bits, but give error if any nonzeros would be discarded
+                                Convert external 2-byte characters          6   unicode                                                        byte                   Convert each pair of bytes into a unicode character. The bytes are in little-endian order.
+                                                                                  byte                                 byte, ASCII (all byte indexes < 128)           Leave unchanged
+                                                                                                                       unicode or unicode4, all UCPs < 128            Discard upper bits
+      Convert unicode/unicode4/UTF-8 to smallest precision needed to hold y 7                                  byte, some non-ASCII (some byte indexes > 127)         Convert to unicode with high-order zeros
+                                                                                unicode                                         unicode, some UCPs > 127              Leave unchanged
+                                                                                                                               unicode4, some UCPs > 127              Convert to unicode. UCPs in the range (16b10000,16b10ffff) are represented in the result by a surrogate pair of 2 unicode characters
+                                                                                                                                integer in (0,16b10ffff)              Convert to unicode. UCPs in the range (16b10000,16b10ffff) are represented in the result by a surrogate pair of 2 unicode characters
+                                             Convert to UTF-8               8     byte                                                         byte                   Leave unchanged
+                                                                                                                unicode, unicode4 or integer in (0,16b10ffff)         Convert to UTF-8 encoded bytes
+                   Convert to unicode4 unless all characters are ASCII      9     byte                                                                                Leave unchanged
+                                                                               unicode4  any character precision containing a UCPs > 127; or integer in (0,16b10ffff) Convert to unicode4. Any UTF-8 is converted to unicode4, and surrogate pairs in unicode are converted.
+                                           Convert to unicode4              10 unicode4                    any character precision, or integer in (0,16b10ffff)       Convert to unicode4
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+**** Common uses ****
+1. Find the unicode_code_point_(UCP) (as a decimal numeral) of (a pasted) glyph: y
+   cp=: 3 u: 7 u: ]
+   cp 'Ï'            NB. glyph pasted between apostrophes: ''
+960
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+**** More Information ****
+1. Use these factory verbs for conversions:
+    * ucp — converts byte to unicode, but not if it's ascii-only!
+    * uucp — converts byte to unicode, even if it's ascii-only
+    * ucpcount — reliably counts the characters in a string of either precision
+    * utf8 — converts unicode to byte, turning non-ascii characters into multi-byte substrings.
+   ucp_z_
+7&u:
+   uucp_z_  NB. Convert UTF-8 to char/unicode, then convert char/unicode to unicode
+u:@(7&u:)
+   ucpcount_z_
+#@(7&u:)
+   utf8_z_  NB. Convert char/unicode to bytes, using UTF-8 if needed
+8&u:
+ucp, uucp, ucpcount, utf8 are
+    * Standard_Library word(s) residing in the 'z'-locale
+    * Defined in the factory script stdlib.ijs which is located in  ~system/main/stdlib.ijs
+    * View the definition(s) in a JQt session by entering:  open '~system/main/stdlib.ijs'
+Use uucp to convert a string to unicode precision, do any text manipulation, then use utf8 to convert back to byte precision (e.g. for output).
+2. If y is empty in  7 u: y, the result is an empty list of byte precision.
+3. In  7 u: y and  8 u: y, y must be an atom or a list. In  6 u: y, y must not be an atom. Otherwise, y may have any rank.
+4. The result of  x u: y for  x e. 1 2 3 4 5 has the same shape as y.
+    * For  6 u: y, each row of y must have an even number of bytes, and the rows of the result have half that length.
+    * For  7 u: y, the result is a list except that it is an atom if y is a unicode atom.
+    * For 8 u: y the result is a list if y is unicode, otherwise it has the same shape as y.
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+
+Retrieved from "https://code.jsoftware.com/mediawiki/index.php?title=Vocabulary/uco&oldid=30615"
+Category:
+    * Voc
+***** Navigation menu *****
+**** Personal tools ****
+    * Log_in
+**** Namespaces ****
+    * Page
+    * Discussion
+??
+**** Variants ****
+**** Views ****
+    * Read
+    * View_source
+    * View_history
+??
+**** More ****
+**** Search ****
+[Unknown INPUT type][Search][Go]
+**** Navigation ****
+    * New_Users
+    * Guides
+    * NuVoc
+    * System
+    * Showcase
+    * Library
+    * Community
+    * Recent_changes
+    * Random_page
+    * J_wiki_search
+**** Tools ****
+    * What_links_here
+    * Related_changes
+    * Special_pages
+    * Printable_version
+    * Permanent_link
+    * Page_information
+    * Cite_this_page
+    * This page was last edited on 10 May 2021, at 18:19.
+    * About_J_Wiki
+    * [Powered_by_MediaWiki]

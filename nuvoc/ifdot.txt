@@ -1,0 +1,137 @@
+
+
+
+
+
+
+
+
+
+****** Vocabulary/ifdot ******
+From J Wiki
+< Vocabulary
+Jump to: navigation, search
+>> <<   Back_to:_Vocabulary Thru_to:_Dictionary
+      if. condition do. block end. Execute if Control
+Valid only inside an explicit_definition.
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+Conditionally execute one of a choice of blocks.
+T=. 0<#y
+if. T do. B1 else. B0 end.
+     [Warning.png] WARNING:
+     if. T do. â¦
+     only tests the first atom of the evaluated T-block T.
+     Thus
+        if. 'chalk' = 'cheez' do. sneeze'' end.
+     will test true because the first atom of the evaluated T-block is 1 even if some subsequent atoms are 0
+        'chalk' = 'cheez'
+     1 1 0 0 0
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+**** Common Uses ****
+1. Execute the ensuing block provided the array evaluated by the T-block is empty or its first atom is nonzero.
+if_trial=: 3 : 0
+if. y do.
+  smoutput 'y is true'
+end.
+)
+
+   if_trial 0
+   if_trial 1
+y is true
+   if_trial 1 1 1 1 1
+y is true
+   if_trial 0 1 1 1 1  NB. see above: WARNING
+   if_trial 1 0 0 0 0  NB. see above: WARNING
+y is true
+   if_trial ''  NB. empty is true
+y is true
+   if_trial 5  NB. Any nonzero is true
+y is true
+
+   emptyif_trial=: 3 : 0  NB. Empty T-block tests true
+if. do.
+  smoutput 'empty T is true'
+end.
+)
+   emptyif_trial 0
+empty T is true
+2. Execute the first block provided y is true, else execute the second block
+
+else_trial=: 3 : 0
+if. y do.
+  smoutput 'y is true'
+else.
+  smoutput 'y is false'
+end.
+)
+
+   else_trial 0
+y is false
+   else_trial 1
+y is true
+3. Execute a succession of blocks according to the value of y
+
+elseif_trial=: 3 : 0
+if. y=2 do.
+  smoutput 'y = 2'
+elseif. y=1 do.
+  smoutput 'y = 1'
+else.          NB. prior to J 9.01 use: elseif. do.
+  smoutput 'y is neither'
+end.
+)
+
+   elseif_trial 2
+y = 2
+   elseif_trial 1
+y = 1
+   elseif_trial 0
+y is neither
+
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+**** Related Primitives ****
+Use these control words inside the loopâ¦
+    * Execute_alternative (else.)
+    * Execute_alternative (elseif.)
+    * End_of_block (end.)
+Consider using instead: Execute_case (select.)
+
+Retrieved from "https://code.jsoftware.com/mediawiki/index.php?title=Vocabulary/ifdot&oldid=28763"
+***** Navigation menu *****
+**** Personal tools ****
+    * Log_in
+**** Namespaces ****
+    * Page
+    * Discussion
+??
+**** Variants ****
+**** Views ****
+    * Read
+    * View_source
+    * View_history
+??
+**** More ****
+**** Search ****
+[Unknown INPUT type][Search][Go]
+**** Navigation ****
+    * New_Users
+    * Guides
+    * NuVoc
+    * System
+    * Showcase
+    * Library
+    * Community
+    * Recent_changes
+    * Random_page
+    * J_wiki_search
+**** Tools ****
+    * What_links_here
+    * Related_changes
+    * Special_pages
+    * Printable_version
+    * Permanent_link
+    * Page_information
+    * Cite_this_page
+    * This page was last edited on 28 June 2020, at 01:19.
+    * About_J_Wiki
+    * [Powered_by_MediaWiki]

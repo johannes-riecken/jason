@@ -1,0 +1,379 @@
+Rank_1 -- operates on lists of y, producing an atom for each one -- WHY_IS_THIS_IMPORTANT?
+A. y converts the permutation y into its permutation number (also called its anagram index).
+acapdot.1.txt
+Rank_1 -- operates on lists of y, producing an atom for each one -- WHY_IS_THIS_IMPORTANT?
+A. y converts the permutation y into its permutation number (also called its anagram index).
+acapdot.txt
+An atom consisting of the boxed empty list (<0$0).
+aco.txt
+The alphabet of the J language — a built-in list of all bytes
+adot.txt
+Rank_Infinity -- operates on [x and] y as a whole -- WHY_IS_THIS_IMPORTANT?
+Applies verb v to each argument in its entirety, and then applies verb u to the result(s) of v
+ampco.txt
+Rank -- depends on the rank of v -- WHY_IS_THIS_IMPORTANT?
+Executes v on the argument(s) cell-by-cell.
+ampdot.txt
+Rank_Infinity -- operates on [x and] y as a whole -- WHY_IS_THIS_IMPORTANT?
+Executes v on the argument(s); then executes u on the result(s) of v; then executes  v^:_1 (i.e. the obverse of v) on the result of u, giving the end result.
+ampdotco.txt
+Rank_Infinity -- operates on x and y as a whole -- WHY_IS_THIS_IMPORTANT?
+**** Common Uses ****
+ampm.txt
+Rank -- depends on the rank of v -- WHY_IS_THIS_IMPORTANT?
+Applies v to each cell of each argument, and then applies u to the result(s) of v for each cell separately
+ampv.txt
+Signals assertion_failure if followed by a noun which is neither Boolean (1) nor an array: (1 1 1 â¦) of all 1's.
+assertdot.txt
+Rank -- depends on the rank of v -- WHY_IS_THIS_IMPORTANT?
+Forms the composition (u@v) of verbs u and v .
+at.txt
+Rank_Infinity -- operates on [x and] y as a whole -- WHY_IS_THIS_IMPORTANT?
+Forms the composition (u@:v) of two verbs u and v .
+atco.txt
+(m@.n) creates the verb defined by the n-th atom from gerund m.
+atdot.txt
+Rank_0 -- operates on individual atoms of y, producing a result of the same shape -- WHY_IS_THIS_IMPORTANT?
+The Factorial of y.
+bang.txt
+Generates a collection of verbs (the so-called Foreigns) to perform such tasks as:
+bangco.txt
+The customized verb u!.n is a predetermined variant of primitive verb u according to the (noun) operand n.
+bangdot.txt
+Rank_0 -- operates on individual atoms of y, producing a result of the same shape -- WHY_IS_THIS_IMPORTANT?
+The absolute value of numeric y. If y is complex, |y is the magnitude of y.
+bar.txt
+Rank_Infinity -- operates on x and y as a whole -- WHY_IS_THIS_IMPORTANT?
+Reverses the axes of an array y
+barco.txt
+Rank_Infinity -- operates on x and y as a whole -- WHY_IS_THIS_IMPORTANT?
+Rearranges the items of y in reverse order
+bardot.txt
+Rank_Infinity -- operates on [x and] y as a whole -- WHY_IS_THIS_IMPORTANT?
+Creates a verb to perform logic on the bit(s) of y (and x, if present).
+bdot.txt
+Rank_Infinity -- operates on x and y as a whole -- WHY_IS_THIS_IMPORTANT?
+Generates one of 3 diagnostic functions associated with verb u according to the value of flag y
+bdotu.txt
+Stops executing any further sentences in the current block during the current iteration, plus any further iterations.
+breakdot.txt
+Rank_Infinity -- operates on x and y as a whole, by items of y -- WHY_IS_THIS_IMPORTANT?
+(u\y) applies verb u to successive prefixes of list y of increasing length (1, 2, 3, ...)
+bslash.txt
+Rank_Infinity -- operates on x and y as a whole, by items of y -- WHY_IS_THIS_IMPORTANT?
+(u\. y) applies verb u to successive suffixes of list y of decreasing length
+bslashdot.txt
+Rank_1 -- operates on lists of y, producing a list of variable length for each one -- WHY_IS_THIS_IMPORTANT?
+Converts the permutation y between direct and cycle representations.
+ccapdot.txt
+      u :: v u :: n Adverse Conjunction
+coco.txt
+Rank -- depends on the rank of u -- WHY_IS_THIS_IMPORTANT?
+Creates a new verb that behaves the same as u, except that its obverse is v
+codot.txt
+Rank_Infinity -- operates on x and y as a whole -- WHY_IS_THIS_IMPORTANT?
+Produces a list containing all the atoms in y, in the order in which they appear in the display of y.
+comma.txt
+Rank_Infinity -- operates on x and y as a whole -- WHY_IS_THIS_IMPORTANT?
+Creates an array whose rank is 1 more than the rank of y, and whose single item is y .
+commaco.txt
+Rank_Infinity -- operates on x and y as a whole, by items of y -- WHY_IS_THIS_IMPORTANT?
+Creates a table where each row of the table comes from an item of y.
+commadot.txt
+Stops executing any further sentences in the given block during the current iteration, but continues with the next iteration.
+continuedot.txt
+Rank_Infinity -- operates on x and y as a whole -- WHY_IS_THIS_IMPORTANT?
+Defines entities of all types.
+cor.txt
+Rank_1 -- operates on lists of y, producing a result of variable shape for each one -- WHY_IS_THIS_IMPORTANT?
+Combines items from the atoms inside a boxed list to form a catalogue.
+curlylf.txt
+Rank_Infinity -- operates on x and y as a whole, by items of y -- WHY_IS_THIS_IMPORTANT?
+The last item of y
+curlylfco.txt
+Rank_Infinity -- operates on x and y as a whole -- WHY_IS_THIS_IMPORTANT?
+A map of the boxed noun y
+curlylfcoco.txt
+Rank_Infinity -- operates on x and y as a whole, by items of y -- WHY_IS_THIS_IMPORTANT?
+The leading item of y
+curlylfdot.txt
+Rank_Infinity -- operates on x and y as a whole -- WHY_IS_THIS_IMPORTANT?
+Create an array having the shape of an item of y that's a composite of the items of y.
+curlyrt.txt
+Rank_Infinity -- operates on x and y as a whole, by items of y -- WHY_IS_THIS_IMPORTANT?
+Drops the last item from y
+curlyrtco.txt
+Rank_Infinity -- operates on x and y as a whole, by items of y -- WHY_IS_THIS_IMPORTANT?
+Drop the leading item from y
+curlyrtdot.txt
+      x u D: n y Secant Slope Conjunction
+dcapco.txt
+Rank -- depends on the rank of u -- WHY_IS_THIS_IMPORTANT?
+The n-th derivative of the mathematical function defined by verb u, evaluated at position y
+dcapdot.txt
+Rank_0 -- operates on individual atoms of y, producing a result of the same shape -- WHY_IS_THIS_IMPORTANT?
+The ordinary n-th derivative of [the mathematical function implemented by] verb u.
+ddot.txt
+Rank_Infinity -- operates on x and y as a whole -- WHY_IS_THIS_IMPORTANT?
+The shape of the noun y .
+dollar.txt
+      [x] $: y Self-Reference
+dollarco.txt
+Rank_Infinity -- operates on x and y as a whole -- WHY_IS_THIS_IMPORTANT?
+Gives a noun that can replace (numeric) y in working code, with only the non-zero atoms of $.y stored in memory. See the entry_in_the_J_Dictionary for details
+dollardot.txt
+Rank_2 -- operates on tables of y -- WHY_IS_THIS_IMPORTANT?
+-/ . * y is the determinant of square matrix y .
+dot.txt
+Rank_Infinity -- operates on x and y as a whole -- WHY_IS_THIS_IMPORTANT?
+Create a Boolean array indicating starting points in y of subarrays equal to x.
+ecapdot.txt
+Rank_Infinity -- operates on x and y as a whole, by items of y -- WHY_IS_THIS_IMPORTANT?
+Returns a Boolean table comparing each box of y (a list of boxed atoms) against each atom in ;y (the Raze of y).
+edot.txt
+For use with: if..
+elsedot.txt
+Rank_Infinity -- operates on x and y as a whole -- WHY_IS_THIS_IMPORTANT?
+     [Information.png] The use of =y is deprecated because its result is too large.
+eq.txt
+Attaches a value to a name to yield a definition.
+eqco.txt
+Attaches a value to a name to yield a definition.
+eqdot.txt
+Fold generates a sequence defined by a recurrence_relation.
+fcap.txt
+Rank -- depends on the rank of u -- WHY_IS_THIS_IMPORTANT?
+Fixes tacit_verb u (i.e. gives it a fixed value without name dependencies) by replacing each name in u with the fixed value of the name.
+fdot.txt
+Execute the ensuing block, or body, which starts after the next do., once for each item of the noun, which results from initial evaluation of a T-block.
+fordot.txt
+Rank_Infinity -- operates on [x and] y as a whole -- WHY_IS_THIS_IMPORTANT?
+Three adjacent verbs, or a noun followed by two verbs, when not followed by a noun (as in [x] (f g h) y), create a fork that separately executes f and h on the argument(s) of the fork, and then executes g dyadically on those results:
+fork.txt
+Make the labelled statement the next statement to be executed
+gotodot.txt
+u`v creates a list of gerunds for u and v — nouns that encode the verb values.
+grave.txt
+Rank_Infinity -- operates on x and y as a whole -- WHY_IS_THIS_IMPORTANT?
+If m is a gerund,  m`:n creates a verb based on m.
+graveco.txt
+Rank_0 -- operates on individual atoms of y, producing a result that may require fill -- WHY_IS_THIS_IMPORTANT?
+Opens (undoes the boxing) of a boxed element or array of boxed elements.
+gt.txt
+Rank_0 -- operates on individual atoms of y, producing a result of the same shape -- WHY_IS_THIS_IMPORTANT?
+Equivalent to y+1.
+gtco.txt
+Rank_0 -- operates on individual atoms of y, producing a result of the same shape -- WHY_IS_THIS_IMPORTANT?
+The ceiling of y i.e. the smallest integer greater than or equal to y
+gtdot.txt
+Rank_0 -- operates on individual atoms of y, producing a result of the same shape -- WHY_IS_THIS_IMPORTANT?
+ey, the y-th power of the mathematical constant: e .
+hat.txt
+Rank_Infinity -- operates on [x and] y as a whole -- WHY_IS_THIS_IMPORTANT?
+Applies verb u (or x&u, if dyadic) to y, n times. This may be interpreted as If or Inverse depending on n.
+hatco.txt
+Rank_0 -- operates on individual atoms of y, producing a result of the same shape -- WHY_IS_THIS_IMPORTANT?
+The natural logarithm of y .
+hatdot.txt
+x (m H. n) y sums x terms of a generalized_hypergeometric_series.
+hcapdot.txt
+Rank_Infinity -- operates on [x and] y as a whole -- WHY_IS_THIS_IMPORTANT?
+Two adjacent verbs when not followed by a noun (as in [x] (u v) y) create a hook that executes v followed by u:
+hook.txt
+Rank_1 -- operates on lists of y, producing a list of variable length for each one -- WHY_IS_THIS_IMPORTANT?
+The indexes of every 1 in the Boolean list y
+icapdot.txt
+Rank_0 -- operates on individual atoms of y, producing a result that may require fill -- WHY_IS_THIS_IMPORTANT?
+Like Integers (i.), except that the sequence ranges from (-y) thru (+y).
+ico.txt
+Rank_1 -- operates on lists of y, producing a result of variable shape for each one -- WHY_IS_THIS_IMPORTANT?
+Returns an ascending (or descending) sequence of integers, wrapped to the shape specified by (|y).
+idot.txt
+Conditionally execute one of a choice of blocks.
+ifdot.txt
+Rank_0 -- operates on individual atoms of y, producing a result of the same shape -- WHY_IS_THIS_IMPORTANT?
+Multiplies y by 0j1, which represents the imaginary unit i .
+jdot.txt
+Rank_Infinity -- operates on [x and] y as a whole -- WHY_IS_THIS_IMPORTANT?
+(u L:0 y) creates a copy of y in which each leaf has been replaced by the result of applying u to the leaf.
+lcapco.txt
+Rank_Infinity -- operates on x and y as a whole -- WHY_IS_THIS_IMPORTANT?
+The greatest level of nesting of a boxed noun, or 0 if unboxed.
+lcapdot.txt
+Rank_Infinity -- operates on x and y as a whole -- WHY_IS_THIS_IMPORTANT?
+Convert the noun y to boxed form, by creating a box whose contents are y. A box is treated as an atom and can be put into an array with other boxes, regardless of the contents of the boxes.
+lt.txt
+Rank_0 -- operates on individual atoms of y, producing a result of the same shape -- WHY_IS_THIS_IMPORTANT?
+Equivalent to y-1
+ltco.txt
+Rank_0 -- operates on individual atoms of y, producing a result of the same shape -- WHY_IS_THIS_IMPORTANT?
+The floor of y i.e. the largest integer less than or equal to y
+ltdot.txt
+Rank -- depends on the rank of u -- WHY_IS_THIS_IMPORTANT?
+u M. is identical in function to verb u, except that it might be faster if u is highly recursive.
+mcapdot.txt
+Rank_0 -- operates on individual atoms of y, producing a result of the same shape -- WHY_IS_THIS_IMPORTANT?
+Negates value of number y
+minus.txt
+Rank_0 -- operates on individual atoms of y, producing a result of the same shape -- WHY_IS_THIS_IMPORTANT?
+Equivalent to y % 2 (y divided by 2).
+minusco.txt
+Rank_0 -- operates on individual atoms of y, producing a result of the same shape -- WHY_IS_THIS_IMPORTANT?
+Equivalent to 1 - y .
+minusdot.txt
+Used to insert a comment in J code, either in the J session or in a script.
+ncapbcapdot.txt
+Rank_Infinity -- operates on x and y as a whole -- WHY_IS_THIS_IMPORTANT?
+Counts the items in y
+number.txt
+Rank_Infinity -- operates on x and y as a whole -- WHY_IS_THIS_IMPORTANT?
+Returns the binary expansion of a given number y as a Boolean list
+numberco.txt
+Rank_1 -- operates on lists of y, producing an atom for each one -- WHY_IS_THIS_IMPORTANT?
+The corresponding number of a binary numeral, given as a Boolean list
+numberdot.txt
+Rank_0 -- operates on individual atoms of y, producing a result of the same shape -- WHY_IS_THIS_IMPORTANT?
+Returns (π times y) given any number y .
+odot.txt
+Rank_0 -- operates on individual atoms of y, producing a result of the same shape -- WHY_IS_THIS_IMPORTANT?
+The y-th prime (starting with 2 as the 0-th prime).
+pco.txt
+Rank_1 -- operates on lists of y, producing a list for each one -- WHY_IS_THIS_IMPORTANT?
+Converts the polynomial y between coefficient and multiplier-and-roots form.
+pdot.txt
+Rank_1 -- operates on lists of y, producing a list for each one -- WHY_IS_THIS_IMPORTANT?
+The first derivative of a given polynomial y.
+pdotdot.txt
+Rank_0 -- operates on individual atoms of y, producing a result of the same shape -- WHY_IS_THIS_IMPORTANT?
+Equivalent to 1 % y, the reciprocal of the number y
+percent.txt
+Rank_0 -- operates on individual atoms of y, producing a result of the same shape -- WHY_IS_THIS_IMPORTANT?
+The square root of y .
+percentco.txt
+Rank_2 -- operates on tables of y -- WHY_IS_THIS_IMPORTANT?
+    * The inverse matrix of square matrix y, denoted y^-1^
+percentdot.txt
+Rank_0 -- operates on individual atoms of y, producing a result of the same shape -- WHY_IS_THIS_IMPORTANT?
+The complex_conjugate of the number y
+plus.txt
+Rank_0 -- operates on individual atoms of y, producing a result of the same shape -- WHY_IS_THIS_IMPORTANT?
+Equivalent to 2 * y.
+plusco.txt
+Rank_0 -- operates on individual atoms of y, producing a result of higher rank -- WHY_IS_THIS_IMPORTANT?
+Decomposes complex numbers into real and imaginary parts
+plusdot.txt
+Rank_0 -- operates on individual atoms of y, producing a result that may require fill -- WHY_IS_THIS_IMPORTANT?
+The prime factorization of integer y, listed in ascending order.
+qco.txt
+Rank_0 -- operates on individual atoms of y, producing a result of the same shape -- WHY_IS_THIS_IMPORTANT?
+Generates a random number uniformly distributed in a range determined by integer y.
+query.txt
+Rank_Infinity -- operates on x and y as a whole -- WHY_IS_THIS_IMPORTANT?
+Rank_0_0 -- operates on individual atoms of x and y, producing a result that may require fill -- WHY_IS_THIS_IMPORTANT?
+Behaves like Roll/Deal (?) — except that the random-number generator (RNG) is reset each time ?. is executed.
+querydot.txt
+Applies the verb u to each cell in turn of an array y, or to corresponding cells of x and y . The "parts" are called n-cells, the operand n determining the size of the n-cell.
+quote.txt
+Rank_Infinity -- operates on x and y as a whole -- WHY_IS_THIS_IMPORTANT?
+Converts y to an array of bytes, converting non-character types to displayable form.
+quoteco.txt
+Rank_1 -- operates on lists of y, producing a result of variable shape for each one -- WHY_IS_THIS_IMPORTANT?
+Executes the sentence y, returning the result of the sentence as the result of ". y. y is a list of characters.
+quotedot.txt
+Rank_0 -- operates on individual atoms of y, producing a result of the same shape -- WHY_IS_THIS_IMPORTANT?
+The angle y (in radians), expressed as a unit vector in the complex plane
+rdot.txt
+Terminates the verb without executing any further code
+returndot.txt
+Rank_Infinity -- operates on [x and] y as a whole -- WHY_IS_THIS_IMPORTANT?
+(u S:0 y) applies verb u to each leaf of y, creating an array whose items are the results of the leaves, with framing_fill added as needed.
+scapco.txt
+Rank_Infinity -- operates on x and y as a whole -- WHY_IS_THIS_IMPORTANT?
+A symbol is an atom of a special type that stands for a list of characters. A symbol is an alternative to a boxed string.
+sco.txt
+Execute one (or one sequence) of a list of blocks whose case.-value includes the value of the select.-selector.
+selectdot.txt
+Rank_Infinity -- operates on x and y as a whole -- WHY_IS_THIS_IMPORTANT?
+Removes one level of boxing from a noun. Cells of the contents of each box then become the items of the result.
+semi.txt
+Rank_1 -- operates on lists of y, producing a list of variable length for each one -- WHY_IS_THIS_IMPORTANT?
+Partitions a string into boxed words according to J's rules_for_word_formation.
+semico.txt
+A collection of 3 adverbs, collectively known as Cut, with different syntax and semantics.
+semidot.txt
+Rank_Infinity -- operates on x and y as a whole -- WHY_IS_THIS_IMPORTANT?
+Trivial case: If y is a list, u;.0 y is the same as u |. y .
+semidot0.txt
+Rank_Infinity -- operates on x and y as a whole -- WHY_IS_THIS_IMPORTANT?
+A family of related adverbs, differing only in small details.
+semidot1.txt
+Rank_Infinity -- operates on x and y as a whole -- WHY_IS_THIS_IMPORTANT?
+The monad (u;.3)y is a special case of the dyad  x(u;.3)y (see below), where x holds the same size for all dimensions, given by  (#$y) $ <./ $y.
+semidot3.txt
+Rank_Infinity -- operates on x and y as a whole, by items of y -- WHY_IS_THIS_IMPORTANT?
+Inserts (dyad) u between the items of y
+slash.txt
+Rank_Infinity -- operates on x and y as a whole, by items of y -- WHY_IS_THIS_IMPORTANT?
+The permutation that sorts the items of y into ascending (/:) or descending (\:) order (numerical or lexicographical)
+slashco.txt
+Rank_Infinity -- operates on x and y as a whole, by items of y -- WHY_IS_THIS_IMPORTANT?
+(u/.y) applies verb u to the oblique diagonals of table y
+slashdot.txt
+Rank_Infinity -- operates on x and y as a whole -- WHY_IS_THIS_IMPORTANT?
+Returns noun y unchanged: [y is equivalent to y.
+squarelf.txt
+Rank_Infinity -- operates on [x and] y as a whole -- WHY_IS_THIS_IMPORTANT?
+1. Raises domain error whenever executed as monad or dyad, whatever the argument(s).
+squarelfco.txt
+Rank_Infinity -- operates on x and y as a whole -- WHY_IS_THIS_IMPORTANT?
+Returns noun y unchanged, i.e. (]y) is equivalent to y.
+squarert.txt
+Rank_0 -- operates on individual atoms of y, producing a result of the same shape -- WHY_IS_THIS_IMPORTANT?
+The sign of the number y
+star.txt
+Rank_0 -- operates on individual atoms of y, producing a result of the same shape -- WHY_IS_THIS_IMPORTANT?
+Equivalent to y ^ 2, the square of numeric noun y.
+starco.txt
+Rank_0 -- operates on individual atoms of y, producing a result of higher rank -- WHY_IS_THIS_IMPORTANT?
+Converts x-y coordinates (given as a complex number) to r-theta coordinates ("theta" being in radians). The angle is in the range (-π,π]
+stardot.txt
+Causes execution to resume after catcht. in a higher-level function.
+throwdot.txt
+Rank_Infinity -- operates on x and y as a whole -- WHY_IS_THIS_IMPORTANT?
+(u~ y) is the same as (y u y)
+tilde.txt
+Rank_Infinity -- operates on x and y as a whole, by items of y -- WHY_IS_THIS_IMPORTANT?
+A Boolean vector with one value per item of y . Which is 1 if the item does not match any previous item.
+tildeco.txt
+Rank_Infinity -- operates on x and y as a whole, by items of y -- WHY_IS_THIS_IMPORTANT?
+Removes duplicates from a list.
+tildedot.txt
+Rank -- depends on the rank of u -- WHY_IS_THIS_IMPORTANT?
+(m~) is the value of the name (m)
+tildem.txt
+You put sentences into a try. structure when you want to recover if they fail. If there is an error in the block following try., the try. is aborted and control passes to the catch./catchd., with catchd. being ignored if debugging is on. catcht. is a special case that picks up the special error case created by a throw. control word. As with other control structures, end. terminates the try. structure.
+trydot.txt
+Rank_Infinity -- operates on x and y as a whole -- WHY_IS_THIS_IMPORTANT?
+The unicode character corresponding to y.
+uco.txt
+Rank_Infinity -- operates on x and y as a whole -- WHY_IS_THIS_IMPORTANT?
+These primitive verbs are replacements for Operand u and v (inside the body of the explicit_definition of a modifier) which may succeed in cases where the modifier fails with value_error.
+udot.txt
+As the first character of a numeric constant, (_) acts as a negative sign to produce a negative constant.
+under.txt
+Rank_Infinity -- operates on [x and] y as a whole -- WHY_IS_THIS_IMPORTANT?
+The value: Infinity (_), whatever [x and] y happen to be.
+underco.txt
+Indeterminate (_.) is a numeric atom. It is a placeholder broadly comparable with NaN (not a number). See: WikiPedia:NaN and Essays/Indeterminate.
+underdot.txt
+STUB
+whiledot.txt
+Rank_Infinity -- operates on x and y as a whole -- WHY_IS_THIS_IMPORTANT?
+Converts number y to extended precision, either extended_integer or rational.
+xco.txt
+Rank_Infinity -- operates on x and y as a whole -- WHY_IS_THIS_IMPORTANT?
+Terminates Fold, in whole or part.
+zcapco.txt
+Rank_Infinity -- operates on [x and] y as a whole -- WHY_IS_THIS_IMPORTANT?
+The value 0, whatever [x and] y happen to be.
+zeroco.txt

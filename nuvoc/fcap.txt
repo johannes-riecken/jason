@@ -1,0 +1,333 @@
+
+
+
+
+
+
+
+
+
+****** Vocabulary/fcap ******
+From J Wiki
+< Vocabulary
+Jump to: navigation, search
+>> <<   Back_to:_Vocabulary
+      u F:. v Fold Multiple Forward Conjunction
+      u F:: v Fold Multiple Reverse Conjunction
+      u F: v Fold Multiple Conjunction
+
+      u F.. v Fold Single Forward Conjunction
+      u F.: v Fold Single Reverse Conjunction
+      u F. v Fold Single Conjunction
+
+In Release 9.02, Fold was modified to execute v before u, which is the reverse of what Release 9.01 did. This page describes 9.02 and later.
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+Fold generates a sequence defined by a recurrence_relation.
+Fold is the collective name given to the six primitives  F.. F.: F. F:. F:: F:
+     [Information.png] All members of the Fold family are best understood as variants of one master conjunction: Fold Multiple Forward (F:.). Therefore we will focus on this conjunction and base our code samples on it.
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+***** Contents *****
+    * 1_Why_not_just_use_a_loop?
+    * 2_How_should_I_define_u_and_v?
+    * 3_How_should_I_specify_y?
+          o 3.1_Limited_vs_unlimited
+          o 3.2_Single_vs_Multiple
+    * 4_How_should_I_specify_x?
+          o 4.1_x_in_unlimited_folds
+          o 4.2_x_in_Forward_and_Reverse_Folds
+    * 5_Which_primitive_should_I_use?
+    * 6_Common_uses
+          o 6.1_1._Apply_a_given_recurrence_relation_to_a_list_of_numbers_to_yield_a_list_of_the_same_size
+          o 6.2_2._Apply_a_given_recurrence_relation_to_a_list_of_numbers_to_yield_the_final_result_(an_integer_atom)
+          o 6.3_3._Build_a_sequence_of_any_desired_length_from_a_single_starting_value
+          o 6.4_4._Simulate_the_trajectory_of_a_falling_object
+    * 7_More_Information
+**** Why not just use a loop? ****
+In Basic, Python and C/C++, you'd use a loop for the things Fold does.
+J has looping_constructs too, notably while. and for. . But they are slow, cumbersome, and lack power. You feel this lack of power most when designing loops to save executing wasted code by use of break., continue., try. and throw.. The objective of J is to let you work on entire arrays with powerful flexible verbs, avoiding the need to map-out buggy complicated flow-of-control using blunt tools. See: Loopless_programming_explained.
+Fold furthers this objective. It hides the complexity of optimized flow-of-control, implementing it in native code. This allows you to focus on designing two verbs u and v to implement your recurrence_relation.
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+**** How should I define u and v? ****
+The operands u and v together specify the recurrence_relation that generates the result.
+    * Operand v implements the mathematical recurrence relation, building a notional underlying sequence to which u does not contribute.
+    * Operand u processes each term of the underlying sequence to build the returned result.
+If you don't need the returned result to differ from the underlying sequence generated by v then set: u=:]
+If you need only the last element of the sequence, use the Fold Single family
+This diagram shows the dataflow from the x- and y-arguments of Fold to the returned noun:
+[Nuvoc-fold-diagram-2.jpg]
+    * y0, y1, y2, y3 â the items of list y
+    * v (ringed) â the mappings defined by each call of verb v
+    * u (ringed) â the mappings defined by each call of verb u
+    * v0, v1, v2, v3 â the notional underlying sequence, comprising the values returned by each call of verb v applied to x and items y0, y1, y2, y3
+    * u0, u1, u2, u3 â the list that actually goes into the result of the fold, comprising the values returned by each call of verb: u applied to v0, v1, v2, v3 .
+
+Fold allows you to avoid needless computation and data storage. Improve the efficiency of your code like this
+    * If you don't need the result item from each intermediate iteration, use Fold Singleâ¦ not Fold Multipleâ¦
+    * Call the primitive dyad Terminate_Fold (Z:) within u or v to suppress the creation of redundant data as your code detects the opportunity for it. Use the x-arguments: _1, 0 or 1, which don't abort Fold itself, but only halt individual iterations to return an abbreviated but still valid result.
+    * For many purposes,  u=:] will suffice. This returns the underlying sequence unchanged, viz. the list of intermediate values passed from each call of v to the next. But if you don't need this list as it stands, design u to keep only what data you need, in the format you need it. See_a_code_example_here which does exactly this in an extreme way.
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+**** How should I specify y? ****
+*** Limited vs unlimited ***
+The Fold Forward and Fold Reverse primitives (called limited folds)treat y as a list of candidate arguments for v, and generate an underlying sequence with one fewer item than y with monadic fold.
+One element of the sequence is produced for each application of v. The first application of v consumes 2 items of y.
+    * F:.Fold Multiple Forward
+    * F::Fold Multiple Reverse
+    * F..Fold Single Forward
+    * F.:Fold Single Reverse
+The other Folds (called unlimited folds) operate on y in its entirety and generate an underlying sequence of unlimited length
+    * F.Fold Single
+    * F:Fold Multiple
+Therefore you must call Terminate_Fold (Z:) within the body of either u or v in order to halt the execution of (unlimited) Fold.
+When experimenting with F. or F:, it is wise to include_(_3_Z:_n) to force termination after a set number of iterations.
+*** Single vs Multiple ***
+Every execution of u produces a u-result. If you need only the last of the u-results, use a Single Fold. If you need all the u-results, use a Multiple Fold. Each u-result is one item of the overall result.
+The result of a Single Fold is the same as taking the last item of the corresponding Multiple Fold, usually.
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+**** How should I specify x? ****
+Once you supply (F:.) with operands u and v, the resulting verb (u F:.v) (call it myFold) is Monad-Dyad. This raises the question: how should Dyad be used, if at all?
+*** x in unlimited_folds ***
+In unlimited Folds (F. and F:) the x argument (if present) is applied to every execution of v . Think of it as supplying unchanging control information to the Fold.
+*** x in Forward and Reverse Folds ***
+In contrast, for folds that process items of y, the sole purpose of x is to supply the y-argument to the first call of v.
+In other words, it provides an initial value for the whole series of iterations.
+Each subsequent call of v takes the output of the previous call for its y-argument. If x is absent then Monad myFold uses the first item of y instead, which then stops being logically part of y.
+The upshot is that these two phrases always return the same result â provided x is a valid item of y:
+   x u F:. v y     NB. Dyad
+     u F:. v x,y   NB. Monad
+where F:. can be replaced by F::. The principle applies to reverse folds as well, but then the monad would be u F:. v y,x
+The disadvantage of the second phrase, Monad, is that the types or shapes of x and y may be incompatible, making it undesirable or even illegal to form x,y .
+Example: y may be hard-coded as i.n (for some integer n) but x may represent a given choice of starting condition and may have any type. Even if x and y are type-compatible, Dyad is better because it avoids the computational expense of forming (x,y) especially if y is large and low-precision.
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+**** Which primitive should I use? ****
+To choose which primitive to use, read the inflections as follows:
+    * The 3 primitives: Fold Multiple * (F:â¦) return the whole sequence.
+    * The 3 primitives: Fold Single * (F.â¦) return only the last term (of the same sequence).
+    * The 2 primitives: Fold * Forward (Fâ¦.) process y left-to-right. (C/f IndexOf(i.).)
+    * The 2 primitives: Fold * Reverse (Fâ¦:) process y right-to-left. (C/f IndexOfLast_(i:).)
+Mnemonically, the inflections are F[single|multiple][forward|backward|neither] where
+    * in the first character, . (one dot) means 'one result item' while : (multiple dots) means 'multiple result items' - reminiscent of #. and #:
+    * in the second character, . means 'from the beginning' while : means 'from the end' - reminiscent of {. and {: - and omitted means 'neither - the iteration is not by items'
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+**** Common uses ****
+*** 1. Apply a given recurrence relation to a list of numbers to yield a list of the same size ***
+   v=: dyad define
+z=. y + 0.01
+z [smoutput x ; 'v' ; y ; '-->' ; z
+)
+
+   u=: monad define
+z=. -y
+z [smoutput '    u' ; y ; '-->' ; z
+)
+
+   x=: 100
+   ]y=: x, 0.1 + i.4
+100 0.1 1.1 2.1 3.1
+
+   ]z=: u F:. v y   NB. multiple forward
+âââââ¬ââ¬ââââ¬ââââ¬âââââââ
+â0.1âvâ100â-->â100.01â
+âââââ´ââ´ââââ´ââââ´âââââââ
+âââââââ¬âââââââ¬ââââ¬ââââââââ
+â    uâ100.01â-->â_100.01â
+âââââââ´âââââââ´ââââ´ââââââââ
+âââââ¬ââ¬âââââââ¬ââââ¬âââââââ
+â1.1âvâ100.01â-->â100.02â
+âââââ´ââ´âââââââ´ââââ´âââââââ
+âââââââ¬âââââââ¬ââââ¬ââââââââ
+â    uâ100.02â-->â_100.02â
+âââââââ´âââââââ´ââââ´ââââââââ
+âââââ¬ââ¬âââââââ¬ââââ¬âââââââ
+â2.1âvâ100.02â-->â100.03â
+âââââ´ââ´âââââââ´ââââ´âââââââ
+âââââââ¬âââââââ¬ââââ¬ââââââââ
+â    uâ100.03â-->â_100.03â
+âââââââ´âââââââ´ââââ´ââââââââ
+âââââ¬ââ¬âââââââ¬ââââ¬âââââââ
+â3.1âvâ100.03â-->â100.04â
+âââââ´ââ´âââââââ´ââââ´âââââââ
+âââââââ¬âââââââ¬ââââ¬ââââââââ
+â    uâ100.04â-->â_100.04â
+âââââââ´âââââââ´ââââ´ââââââââ
+_100.01 _100.02 _100.03 _100.04
+
+   z-: x u F:. v }.y  NB. Try the equivalent dyad phrase
+...identical boxed-trace omitted...
+1
+
+*** 2. Apply a given recurrence relation to a list of numbers to yield the final result (an integer atom) ***
+   ]z=: u F.. v y   NB. single forward
+âââââ¬ââ¬ââââ¬ââââ¬âââââââ
+â0.1âvâ100â-->â100.01â
+âââââ´ââ´ââââ´ââââ´âââââââ
+âââââââ¬âââââââ¬ââââ¬ââââââââ
+â    uâ100.01â-->â_100.01â
+âââââââ´âââââââ´ââââ´ââââââââ
+âââââ¬ââ¬âââââââ¬ââââ¬âââââââ
+â1.1âvâ100.01â-->â100.02â
+âââââ´ââ´âââââââ´ââââ´âââââââ
+âââââââ¬âââââââ¬ââââ¬ââââââââ
+â    uâ100.02â-->â_100.02â
+âââââââ´âââââââ´ââââ´ââââââââ
+âââââ¬ââ¬âââââââ¬ââââ¬âââââââ
+â2.1âvâ100.02â-->â100.03â
+âââââ´ââ´âââââââ´ââââ´âââââââ
+âââââââ¬âââââââ¬ââââ¬ââââââââ
+â    uâ100.03â-->â_100.03â
+âââââââ´âââââââ´ââââ´ââââââââ
+âââââ¬ââ¬âââââââ¬ââââ¬âââââââ
+â3.1âvâ100.03â-->â100.04â
+âââââ´ââ´âââââââ´ââââ´âââââââ
+âââââââ¬âââââââ¬ââââ¬ââââââââ
+â    uâ100.04â-->â_100.04â
+âââââââ´âââââââ´ââââ´ââââââââ
+_100.04
+
+   z-: {:(u F:. v y)
+...identical boxed-trace omitted...
+1
+Notes
+    * Define u, v, x, y as in 1.
+    * The boxed entries generated by v are the underlying sequence. Observe they are the same as in 1.
+    * Likewise the boxed entries generated by u are the same as in 1.
+    * (u F.. v y) -: {: u F:. v y
+Things to try
+    * Hide the boxed (trace) entries by commenting-out the smoutput lines in the bodies of u and v.
+    * Does the above monad/dyad identity work withâ¦? (u F.: v y) -: {: u F:: v y
+
+*** 3. Build a sequence of any desired length from a single starting value ***
+   COUNT=: 5   NB. 1+ max length of generated sequence
+
+   v=: monad define
+wd'msgs'   NB. force pending smoutputs to appear in Term window.
+_2 Z: -.*COUNT=:COUNT-1   NB. _2 means: terminate Fold altogether
+z=. y + 1
+z [smoutput '   v' ; y ; '-->' ; z
+)
+
+   u=: monad define
+z=. -y
+z [smoutput '   u' ; y ; '-->' ; z
+)
+
+   y=: 100
+
+   u F: v y
+ââââââ¬ââââ¬ââââ¬ââââ
+â   vâ100â-->â101â
+ââââââ´ââââ´ââââ´ââââ
+ââââââ¬ââââ¬ââââ¬âââââ
+â   uâ101â-->â_101â
+ââââââ´ââââ´ââââ´âââââ
+ââââââ¬ââââ¬ââââ¬ââââ
+â   vâ101â-->â102â
+ââââââ´ââââ´ââââ´ââââ
+ââââââ¬ââââ¬ââââ¬âââââ
+â   uâ102â-->â_102â
+ââââââ´ââââ´ââââ´âââââ
+ââââââ¬ââââ¬ââââ¬ââââ
+â   vâ102â-->â103â
+ââââââ´ââââ´ââââ´ââââ
+ââââââ¬ââââ¬ââââ¬âââââ
+â   uâ103â-->â_103â
+ââââââ´ââââ´ââââ´âââââ
+ââââââ¬ââââ¬ââââ¬ââââ
+â   vâ103â-->â104â
+ââââââ´ââââ´ââââ´ââââ
+ââââââ¬ââââ¬ââââ¬âââââ
+â   uâ104â-->â_104â
+ââââââ´ââââ´ââââ´âââââ
+_101 _102 _103 _104
+Notes
+    * y-argument of Z: must be a boolean.
+    * y=0 is no-op.
+    * y=1 causes Z: to terminate Fold.
+*** 4. Simulate the trajectory of a falling object ***
+cocurrent 'base'
+require 'plot'
+MAXITER=: 50    NB. safety long-stop
+S=: 100         NB. height above ground (m) - UPDATED
+T=: 0           NB. time at end of current epoch (s) - UPDATED
+e=: 0.1         NB. time interval of simulation epoch (s) - CONST
+U=: 0           NB. starting velocity (m/s) - CONST
+V=: U           NB. velocity at end of current epoch (s) - UPDATED
+g=: 9.81        NB. acceleration due to gravity at earth surface (m/s^2) - CONST
+mean =: +/ % #  NB. definition of mean - VERB
+
+trajectory=: monad : 'u F: v y'
+
+v=: monad define
+  NB. Trajectory of solid object in free-fall
+_3 Z: MAXITER             NB. Stop Fold when there have been too many iterations
+_2 Z: S<:0                NB. Stop Fold when object hits the ground
+  NB. Recurrence relation is based on free-fall formula: V = U + gt
+V=: y + g*e               NB. free-fall: vertical velocity at end of epoch
+S=: S - e*mean y,V        NB. free-fall: vertical height at end of epoch
+T=: T + e                 NB. time of flight at end of epoch
+if. S<:0 do. smoutput '+++ LANDED: T=',":T end.
+V return.
+)
+
+u=: monad : 'S'
+
+plot trajectory U
++++ LANDED: T=4.6
+[Plot-trajectory-Fold.jpg]
+Notes
+    * The underlying series is computed iteratively by operand: v
+    * Verb v returns current velocity V . But we want S trajectory, not V trajectory. Use operand u to return the current value of S
+    * Original model assumes motion is vertical. But the formulas remain valid even if object has constant horizontal velocity.
+    * By plotting successive epochs horizontally, addon plot manufactures a constant horizontal velocity for the falling object, now a projectile.
+    * A more advanced model capable of computing the trajectory of a spacecraft will handle velocity (V) and earth gravity (g) as 2-D or 3-D vectors, g becoming variable and directional. For extreme precision g even needs correction for general relativity, as required in practice for a GPS satellite.
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+**** More Information ****
+1. Z: can_appear_multiple_times during the execution of u and v.
+    * If (_2 Z: 1) is executed, the Fold terminates immediately returning the most recent result.
+    * If (_1 Z: 1) is executed during the execution of v, v terminates immediately and the next iteration, if there is one, begins with the same right-operand as the previous iteration. The result is unchanged.
+    * If (_1 Z: 1) is executed during the execution of u, u terminates immediately and the next iteration, if there is one, begins with the result of v as the right-operand. The result is unchanged.
+    * If (0 Z: 1) is executed, execution proceeds normally, but when u completes the result is unchanged.
+    * If (1 Z: 1) is executed, execution proceeds normally, but stops before the next iteration, returning the result incumbent at that time.
+When u completes, whether it contributes to the result depends on whether (0 Z: 1) was executed. Z:left-arguments of _2 and _1 cause u not to be completed for that iteration. When the next iteration is ready to start, execution terminates if (1 Z: 1) was executed.
+2. For Forward and Reverse Folds, the maximum number of iterations is (((#y)-1) plus 1 if x is specified). If this value is _1 or 0, there are not enough items to apply v even once. In this case u@(v/) will be applied to a empty array (taken from x if x is given, otherwise from y) to produce the neutral for v: the result of Fold Single will be that neutral, while the result of Fold Multiple will be an empty array of 0 items of that neutral.
+3. Except when a fill-cell has been used, if no execution of u has contributed to the final result, domain error is returned.
+4. If the u-results do not have the same shape, the individual u-results are filled to bring them to a common item shape. In this case the last item of a Fold Multiple might differ from the result of the corresponding Fold Single because of the fill.
+
+Retrieved from "https://code.jsoftware.com/mediawiki/index.php?title=Vocabulary/fcap&oldid=30677"
+***** Navigation menu *****
+**** Personal tools ****
+    * Log_in
+**** Namespaces ****
+    * Page
+    * Discussion
+??
+**** Variants ****
+**** Views ****
+    * Read
+    * View_source
+    * View_history
+??
+**** More ****
+**** Search ****
+[Unknown INPUT type][Search][Go]
+**** Navigation ****
+    * New_Users
+    * Guides
+    * NuVoc
+    * System
+    * Showcase
+    * Library
+    * Community
+    * Recent_changes
+    * Random_page
+    * J_wiki_search
+**** Tools ****
+    * What_links_here
+    * Related_changes
+    * Special_pages
+    * Printable_version
+    * Permanent_link
+    * Page_information
+    * Cite_this_page
+    * This page was last edited on 22 May 2021, at 14:13.
+    * About_J_Wiki
+    * [Powered_by_MediaWiki]

@@ -1,0 +1,97 @@
+
+
+
+
+
+
+
+
+
+****** Vocabulary/selectdot ******
+From J Wiki
+< Vocabulary
+Jump to: navigation, search
+>> <<   Back_to:_Vocabulary Thru_to:_Dictionary
+      select. selector Evaluate selector
+      case. value do.  Execute if value matches selector              Control
+      fcase. value do. Fall into or execute if value matches selector
+Valid only inside an explicit_definition.
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+Execute one (or one sequence) of a list of blocks whose case.-value includes the value of the select.-selector.
+The block following the select. is evaluated. Then the blocks following each subsequent case. or fcase. are evaluated. When a case is found whose value includes the result of the select.-block, the block following its do. is executed.
+After a case.-block has been executed, control passes to a single end. statement corresponding to the select., unless the executing case is fcase.--a fallthrough case. Execution of an fcase. is followed by unconditional execution of the next case.-block, which may be another fcase.:
+select_trial=: 3 : 0
+select. y
+fcase. 'A' do.
+case. 'a' do.
+  smoutput 'select a'
+fcase. 'B' do.
+case. 'b' do.
+  smoutput 'select b'
+case. do.    NB. optional catch-all case
+  smoutput 'none of these'
+end.
+)
+
+   select_trial 'a'
+select a
+   select_trial 'A'
+select a
+   select_trial 'b'
+select b
+   select_trial 'B'
+select b
+   select_trial 'C'
+none of these
+   select_trial 99
+none of these
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+***** Details *****
+1. The select.-block is terminated by the first case., not by a do..
+2. The block following each case. or fcase., except the last, is terminated by do., not end..
+3. If the case.-value is omitted, the case matches any selector.
+4. value may be a list of boxed values; the case is executed if the selector matches any of them. If the selector or value is unboxed, it is first boxed before being tested. Thus an unboxed select. selection list would have to be matched by a case.-value list item-by-item, in the same order, to cause execution of that case.
+Formally, the test is selector e.&boxifopen value where boxifopen=:<^:(0&(>: L.)).
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+
+Retrieved from "https://code.jsoftware.com/mediawiki/index.php?title=Vocabulary/selectdot&oldid=28643"
+Category:
+    * WorkInProgress
+***** Navigation menu *****
+**** Personal tools ****
+    * Log_in
+**** Namespaces ****
+    * Page
+    * Discussion
+??
+**** Variants ****
+**** Views ****
+    * Read
+    * View_source
+    * View_history
+??
+**** More ****
+**** Search ****
+[Unknown INPUT type][Search][Go]
+**** Navigation ****
+    * New_Users
+    * Guides
+    * NuVoc
+    * System
+    * Showcase
+    * Library
+    * Community
+    * Recent_changes
+    * Random_page
+    * J_wiki_search
+**** Tools ****
+    * What_links_here
+    * Related_changes
+    * Special_pages
+    * Printable_version
+    * Permanent_link
+    * Page_information
+    * Cite_this_page
+    * This page was last edited on 22 May 2020, at 02:43.
+    * About_J_Wiki
+    * [Powered_by_MediaWiki]

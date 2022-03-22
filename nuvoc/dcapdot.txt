@@ -1,0 +1,202 @@
+
+
+
+
+
+
+
+
+
+****** Vocabulary/dcapdot ******
+From J Wiki
+< Vocabulary
+Jump to: navigation, search
+>> <<   Back_to:_Vocabulary Thru_to:_Dictionary
+      u D. n y Derivative Conjunction
+Rank -- depends on the rank of u -- WHY_IS_THIS_IMPORTANT?
+
+     [Warning.png] This primitive has been removed from J Version 9.01 and later
+The math/calculus addon defines a conjunction pderiv_jcalculus_ that replaces the functions of this primitive. Execute
+load 'math/calculus'
+to load this addon after you have downloaded it through Tools|Package_Manager.
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+The n-th derivative of the mathematical function defined by verb u, evaluated at position y
+Note that y represents what traditional math calls the x-axis!
+   sin=: 1&o."0
+   cos=: 2&o."0
+   x=: o. 6 %~ i.7
+
+   sin x
+0 0.5 0.866025 1 0.866025 0.5 1.22465e_16
+   cos x
+1 0.866025 0.5 6.12323e_17 _0.5 _0.866025 _1
+   sin D. 1 x    NB. First derivative of sin is cos
+1 0.866025 0.5 6.12323e_17 _0.5 _0.866025 _1
+   sin D. 2 x   NB. Second derivative of sin is -sin
+0 _0.5 _0.866025 _1 _0.866025 _0.5 _1.22465e_16
+If the rank of u is not 0, the result of u depends on each atom in a cell of y.
+Phrase  u D. y gives the partial derivative for each atom, indicating the sensitivity of the result to small incremental changes at that atom
+   +/&.:*: 0 3 4
+5
+   +/&.:*: D. 1 (0 3 4)
+8.88178e_9 0.6 0.8
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+**** Common uses ****
+1. To approximate an ordinary derivative that cannot be calculated by u d. n
+   ! d. 1   NB. Gamma function not supported symbolically...
+|domain error
+   ! D. 1 (1)  NB. ...but can be approximated
+0.422784
+2. To evaluate the Jacobian (determinant of matrix of partial derivatives of a transformation) at a point
+   recttopolar =: *.@:j./  NB. A transformation
+   recttopolar 3 4   NB. It converts (x,y) to (r,theta)
+5 0.927295
+   recttopolar D. 1 (3 4)   NB. J((r,theta)/(x,y))
+0.6 _0.16
+0.8  0.12
+   % -/ . * recttopolar D. 1 (3 4)  NB. |J((x,y)/(r,theta))| = %|J((r,theta)/(x,y))|
+5
+3. To approximate all partial derivatives by finding the sensitivity of each result value to change in each input
+   NB. Verb to calculate min,mean,max over the atoms of a table
+   (<./ , (+/ % #) , >./)@,"2  (2 4 $ 3 1 2 5   2 3 7 4)
+1 3.375 7
+
+   NB. For each atom in the 2x4 input, calculate the sensitivity of each result value to
+   NB. changes in that input atom.  The result shows that the mean is equally sensitive
+   NB. to changes in all inputs, but that the min and max only change when the point containing
+   NB. the extreme value changes
+   (<./ , (+/ % #) , >./)@,"2 D. 1 (2 4 $ 3 1 2 5   2 3 7 4)
+0 0.125 0
+1 0.125 0
+0 0.125 0
+0 0.125 0
+
+0 0.125 0
+0 0.125 0
+0 0.125 1
+0 0.125 0
+
+   NB. min,mean,max over each list.  Now the sensitivity is calculated over each 1-cell.
+   (<./ , (+/ % #) , >./)@,"1 D. 1 (2 4 $ 3 1 2 5   2 3 7 4)
+0 0.25 0
+1 0.25 0
+0 0.25 0
+0 0.25 1
+
+1 0.25 0
+0 0.25 0
+0 0.25 1
+0 0.25 0
+4. To test whether a critical point of a function is a minimum, by seeing whether the Hessian (matrix of mixed partial second derivatives) is positive definite
+   func =: verb define                NB. function (x-2)^2 + (y-3)^2, with critical point at (2,3)
+'x y' =. y
+(*: x-2) + (*: y-3)
+)
+   ]hessian =: func D. 1 D. 1 (2 3)   NB. Matrix of mixed 2nd partial derivatives
+           2 _2.64698e_16
+_8.82326e_17            2
+   NB. Hessian is positive definite if all principal minors have +ve determinant
+   0 *./@:< (,.~ i. #hessian) (-/ . *)@}. hessian
+1
+Note:  D. 1 D. 1 (2 3) is used above where you'd expect to see  D. 2 (2 3) — which is buggy. See below: "More Information".
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+**** Related Primitives ****
+Ordinary_Derivative (u d. n)
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+**** More Information ****
+1. If u is one of the allowed_forms for  u d. 1, the ordinary derivative will be calculated symbolically. This will be more accurate than the approximation used for calculating unknown derivatives
+   0j13 ": sin d.1 (1)       NB. known form
+0.5403023058681
+   0j13 ": sin D.1 (1)       NB. D. also accurate
+0.5403023058681
+   0j13 ": (1 o. ]) d.1 (1)  NB. Unknown form
+|domain error
+   0j13 ": (1 o. ]) D.1 (1)  NB. D. loses precision
+0.5403022640404
+2. Partial derivatives are calculated when the cells of u y have rank greater than 0.
+The result contains the derivative of each result atom with respect to each input atom.
+The shape of the overall result will be
+(frame of y wrt verb u) , (shape of y) , (shape of result of u on a single cell)
+                          |<---- shape of result of single cell of u D. 1 ---->|
+3. Higher derivatives are requested by n greater than 1. These are calculated symbolically only if u is an allowed_form for u d. 1 with rank 0. Other derivatives are approximate, and inaccurate for n>2
+   0j13 ": sin d.2 (1)       NB. 2nd derivative of sin x at 1, accurately
+_0.8414709848079
+   0j13 ": sin"0 D.2 (1)     NB. Using D. with rank 0 still accurate
+_0.8414709848079
+   0j13 ": sin D.2 (1)       NB. not rank 0, it's an approximation
+_0.8437694987151
+  0j13 ": sin D.3 (1)        NB. Approximation of 3d derivative is way off
+111022.3024625156500
+   0j13 ": sin"0 D.3 (1)     NB. Accurate one is still OK
+_0.5403023058681
+   0j13 ": sin D. 1 D. 1  D. 1 (1)  NB. Much better to avoid higher derivatives
+_0.5352054832652
+4. Higher partial derivatives are also allowed. These are always approximated, and inaccurate for  n>2. The second derivative is the derivative of a verb  u D. 1 whose result on each cell of u has shape
+(shape of y) , (shape of result of u on a single cell)
+The shape of  u D. 2 y is
+(frame of y wrt verb u) , (shape of y) , (shape of y) , (shape of result of u on a single cell)
+                                         |<---- shape of result of single cell of u D. 1 ---->|
+                          |<----------- shape of result of single cell of u D. 2 ------------>|
+The pattern continues for higher derivatives. These derivatives are all the possible mixed partial derivatives of u at y. The indexes in the  (shape of y) sections of the above schematic select a particular mixed partial derivative.
+Warning: the calculation of higher partial derivatives is buggy; prefer repeated application of D. 1.
+5.  u D. n does not accept negative n, as  u d. n does.
+6. n can be a list, in which case  u D. n is applied within each cell of y using each atom of n in turn.
+The shape of the overall result is
+(frame of y wrt verb u) , ($n), (; (>./n) # <$y) , (shape of result of u on a single cell)
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+**** Oddities ****
+1. Generating higher-order partial derivatives with  D. 2 fails. Use repeated application of  D. 1 instead.
+2. Higher-order derivatives are less accurate than repeated application of  D. 1.
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+      u`v D. n Assign Derivative Conjunction
+     [Warning.png] This primitive has been removed from J Version 9.01 and later
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+Creates a verb that behaves like u, except that if Derivative (D.) is applied to it, its derivative is taken to be verb v
+   atand =: _3&o."0 ` (%@>:@*:) D. 1   NB. arctan, with derivative = 1/(1+x^2)
+   0j13 ": _3&o."0 D. 1 (1)            NB. approximated derivative
+0.4999999758670
+   0j13 ": atand D. 1 (1)              NB. exact value
+0.5000000000000
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+
+Retrieved from "https://code.jsoftware.com/mediawiki/index.php?title=Vocabulary/dcapdot&oldid=26715"
+Category:
+    * Voc
+***** Navigation menu *****
+**** Personal tools ****
+    * Log_in
+**** Namespaces ****
+    * Page
+    * Discussion
+??
+**** Variants ****
+**** Views ****
+    * Read
+    * View_source
+    * View_history
+??
+**** More ****
+**** Search ****
+[Unknown INPUT type][Search][Go]
+**** Navigation ****
+    * New_Users
+    * Guides
+    * NuVoc
+    * System
+    * Showcase
+    * Library
+    * Community
+    * Recent_changes
+    * Random_page
+    * J_wiki_search
+**** Tools ****
+    * What_links_here
+    * Related_changes
+    * Special_pages
+    * Printable_version
+    * Permanent_link
+    * Page_information
+    * Cite_this_page
+    * This page was last edited on 30 August 2019, at 09:21.
+    * About_J_Wiki
+    * [Powered_by_MediaWiki]

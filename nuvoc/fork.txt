@@ -1,0 +1,185 @@
+
+
+
+
+
+
+
+
+
+****** Vocabulary/fork ******
+From J Wiki
+< Vocabulary
+Jump to: navigation, search
+>> <<   Back_to:_Vocabulary Thru_to:_Dictionary
+      [x] (f g h) y Fork Invisible Conjunction
+Rank_Infinity -- operates on [x and] y as a whole -- WHY_IS_THIS_IMPORTANT?
+
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+Three adjacent verbs, or a noun followed by two verbs, when not followed by a noun (as in [x] (f g h) y), create a fork that separately executes f and h on the argument(s) of the fork, and then executes g dyadically on those results:
+If f is a noun, its "execution" simply produces its value, as discussed below.
+We are talking here about after modifiers have been applied, so that there are only verbs and nouns. (%&2 + 2&*) is a fork made from the three verbs %&2, +, and 2&* .
+x (f g h) y â (x f y) g (x h y)      result
+(f g h) y â (f y) g (h y)               |
+                                         g
+                                        / \
+                                       /   \
+                                      /     \
+                                     f       h
+                                   [/]\    [/]\
+                                  [x]  y  [x]  y
+
+   (+/ % #) 1 2 3 4 5   NB. A fork
+3
+   (+/ 1 2 3 4 5) % (# 1 2 3 4 5)   NB. equivalent computation
+3
+There is a huge difference between
+   %: +/ *: 3 4  NB. Pythagorean theorem: square, then total, then square root
+5
+and
+   (%: +/ *:) 3 4  NB. ???
+10.7321 17.7321
+     11      18
+The first is simply right-to-left execution of *: 3 4 followed by +/ 9 16 followed by %: 25 . The second creates a fork out of the verbs (%: +/ *:) and then executes that according to the definition above, producing who-knows-what.
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+*** A Beginner's Error ***
+When you find a sequence of three verbs that performs a function you like, like the Pythagorean calculation above, you might try to make a single verb out of them, with
+   length=: %: +/ *:   NB. find length of vector y
+but you will be disappointed when you use it:
+   length 3 4
+10.7321 17.7321
+     11      18
+The assignment to the name length created a fork, because the three adjacent verbs were not followed by a noun.
+One way to think of this is that when substituting for a name, like length here, you must put parentheses around the substitution to avoid strange effects. This is akin to ordinary mathematics, where if you know that y=x+2 and you want to substitute that into z=y^2^+2y+5, you use parentheses to get z=(x+2)^2^+2(x+2)+5. In the sentence
+   length 3 4
+when you substitute for the name, you end up with
+   (%: +/ *:) 3 4
+which is a fork and not at all what you wanted.
+To do what you wanted you could have written length =: %:@:(+/)@:*: or equivalently using forks length =: [: %: [: +/ *:
+The substitution model described above is not at all how J actually executes sentences, but it will get you the right answers.
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+**** Common uses ****
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+**** More Information ****
+1. If the fork itself is executed dyadically, i. e. there is a left argument (x (f g h) y), verbs f and h are executed dyadically as x f y and x h y. If there is no x argument to the fork ((f g h) y), f and h are executed as f y and h y.
+2. When a fork appears in a tacit definition, where it is creating a verb (and therefore not being executed on a noun), it doesn't have to be enclosed in parentheses:
+   mean =: +/ % #
+   mean 1 2 3
+2
+3. In a normal sentence that is executing on noun arguments to produce a noun result, a fork must be enclosed in parentheses, as discussed above.
+4. The sequence noun-verb-verb, not followed by a noun, produces a NVV fork which is like a regular fork except that the noun simply produces its value regardless of the arguments to the fork.
+ result of [x] (N g h) y
+    |
+    g
+   / \
+  N   h
+    [/]\
+   [x]  y
+
+   5 (3 + *) 6
+33
+5. A sequence of more than 3 verbs in a row (not followed by a noun) is processed from right to left and becomes a sequence of forks. If the sequence has an even number of verbs, the last one on the left is part of a final hook.
+Odd-numbered positions (numbering from the right), except the rightmost, may be filled by nouns, as in NVV forks.
+
+Odd number of verbs: numbering the verbs from the right, odd-numbered verbs are all executed on the original arguments of the overall fork (monadically if the overall fork has no x argument, dyadically if it does), and even-numbered verbs are all executed dyadically on results of adjacent odd-numbered verbs.
+result<----v12<----v10<----v8<-----v6<-----v4<-----v2
+           /       /       /       /       /       / \
+          /       /       /       /       /       /   \
+         /       /       /       /       /       /     \
+       v13     v11      v9      v7      v5      v3      v1
+      [/]\    [/]\    [/]\    [/]\    [/]\    [/]\    [/]\
+     [x]  y  [x]  y  [x]  y  [x]  y  [x]  y  [x]  y  [x]  y
+
+   2 (3 * [ + >. - <.) 5
+15
+
+result<---- * <---- + <---  -
+           /       /       / \
+          /       /       /   \
+         /       /       /     \
+        3       [       >.      <.
+               / \     / \     / \
+              2   5   2   5   2   5
+Even number of verbs: numbering the verbs from the right, odd-numbered verbs are all executed monadically on the original y; even-numbered verbs except the leftmost are executed dyadically on the results of odd-numbered verbs; the leftmost verb (which is part of a hook) is executed dyadically, with a left argument of x or y.
+result<---v14<---v12<-v10<-v8<-v6<-v4<-v2
+          /      /    /   /   /   /   / \
+      x or y    v13  v11 v9  v7  v5  v3  v1
+                |    |   |   |   |   |   |
+                y    y   y   y   y   y   y
+
+   2 1 3 (+   4 <. >./ - <./) 3 1 4 1 5 9
+6 5 7
+
+result<--- + <-- <. <- -
+          /     /     / \
+       2 1 3   4    >./ <./
+                     |   |
+                     |   3 1 4 1 5 9
+                     3 1 4 1 5 9
+6. Any odd-numbered verb (counting from the right) except the rightmost may be replaced by [: (Cap) to produce a capped fork. The [: is not a verb. Its presence in ([: g h) indicates that its tine of the fork is nonexistent: it is not executed, and moreover g is executed as a monad.
+      result              result
+        |                   |
+normal  g           capped  g
+fork   / \          fork     \
+      /   \                   \
+     /     \             /     \
+    f       h          [:       h
+  [/]\    [/]\        [/]\    [/]\
+ [x]  y  [x]  y      [x]  y  [x]  y
+
+   (3 * {. + [: i. [: >: {: - {.) 4 8  NB. integers between 4 and 8, tripled
+12 15 18 21 24
+
+result <------ * <- + <- i. <- >: <- -
+              /    /                / \
+             /    /    /     /     /   \
+            3    {.   [:    [:    {:    {.
+                 |    |     |     |     |
+                4 8  4 8   4 8   4 8   4 8
+7. In the fork (f g h), h is executed before f (as is appropriate given J's general right-to-left execution model), but this behavior is not guaranteed, so don't rely on it.
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+**** Related Primitives ****
+Hook (u v), Atop (u@v), At (u@:v), Compose (u&v), Appose (u&:v), Under (u&.v), Under (u&.:v)
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+
+Retrieved from "https://code.jsoftware.com/mediawiki/index.php?title=Vocabulary/fork&oldid=17678"
+Category:
+    * Voc
+***** Navigation menu *****
+**** Personal tools ****
+    * Log_in
+**** Namespaces ****
+    * Page
+    * Discussion
+??
+**** Variants ****
+**** Views ****
+    * Read
+    * View_source
+    * View_history
+??
+**** More ****
+**** Search ****
+[Unknown INPUT type][Search][Go]
+**** Navigation ****
+    * New_Users
+    * Guides
+    * NuVoc
+    * System
+    * Showcase
+    * Library
+    * Community
+    * Recent_changes
+    * Random_page
+    * J_wiki_search
+**** Tools ****
+    * What_links_here
+    * Related_changes
+    * Special_pages
+    * Printable_version
+    * Permanent_link
+    * Page_information
+    * Cite_this_page
+    * This page was last edited on 4 April 2016, at 00:21.
+    * About_J_Wiki
+    * [Powered_by_MediaWiki]

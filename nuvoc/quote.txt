@@ -1,0 +1,226 @@
+
+
+
+
+
+
+
+
+
+****** Vocabulary/quote ******
+From J Wiki
+< Vocabulary
+Jump to: navigation, search
+>> <<   Back_to:_Vocabulary Thru_to:_Dictionary
+      u"n Rank Conjunction
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+Applies the verb u to each cell in turn of an array y, or to corresponding cells of x and y . The "parts" are called n-cells, the operand n determining the size of the n-cell.
+     [Information.png] For other uses of (") see:
+         * Constant_Verb (m"n)
+         * Apply_a_Different_Verb_on_Each_Cell (gerund"n)
+         * Copy_Rank (u"v) (m"v)
+(") is the most-often-used modifier in J. It corresponds to the simplest form of looping in other languages.
+u"n creates a new verb whose rank is n. This new verb applies u to the n-cells (for the given operand n) of its argument y, and collects_the_results_from_each_cell into a single result.
+   ] y=: i. 2 3
+0 1 2
+3 4 5
+
+   u=: <        NB. u is the primitive verb: Box
+
+   u y          NB. Apply Box (<) to the whole of y
++-----+
+|0 1 2|
+|3 4 5|
++-----+
+   u"1 y        NB. Apply Box (<) to each 1-cell (i.e. each row (=list)) of y
++-----+-----+
+|0 1 2|3 4 5|
++-----+-----+
+   u"0 y        NB. Apply Box (<) to each 0-cell (i.e. each atom) of y
++-+-+-+
+|0|1|2|
++-+-+-+
+|3|4|5|
++-+-+-+
+*** Applying a Different Verb on Each Cell ***
+If u is a gerund, it specifies a sequence of verbs. The first verb is applied to the first cell, the second verb to the second cell, and so on, wrapping around if there are more cells than verbs in the gerund.
+   +:`*:`%:"0 (2 3 4)  NB. double the first, square the second, square-root the third
+4 9 2
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+**** Common uses ****
+1. Sum a matrix (an array of rank 2) across rather than down.
+   ] y=: i.2 2
+0 1
+2 3
+
+   +/ y         NB. sum down
+2 4
+   +/"1 y       NB. sum across
+1 5
+Verb: +/"1 applies the verb +/ to the 1-cells (i.e. the lists) of y (a list_of lists). This sums each list.
+2. Select items 1 and 2 from each row of a table y
+   ] y =: i. 3 4
+0 1  2  3
+4 5  6  7
+8 9 10 11
+
+   1 2 { y       NB. Select items 1 and 2 - not what we want (treated as rows 1 and 2)
+4 5  6  7
+8 9 10 11
+   1 2 {"1 1 y   NB. Select items 1 and 2 from each row; i.e. the entire columns 1 and 2
+1  2
+5  6
+9 10
+Note: n can be a list as well as an atom.  {"1 1 specifies 1-cells for x and y in turn.
+3. Rotate each row of an array y by a different amount
+   ]y =: 4 $ ,: 'a b c d '
+a b c d
+a b c d
+a b c d
+a b c d
+
+   1 0 _1 0 |."0 1 y
+ b c d a
+a b c d
+ a b c d
+a b c d
+The verb |. is applied between 0-cells of x and 1-cells of y . In other words, each atom of x tells how much to rotate the corresponding row of y.
+Note: n can be a list as well as an atom. The phrase  {"0 1 specifies 0-cells for x and 1-cells for y in turn.
+4. Guide execution of a verb to desired cells
+   Cards =. '6789TJQKA' ,"0"1 0 (ucp 'â â¡â¢â£')   NB. Join (atoms of) (lists of x with atoms of y)
+   <"2 Cards                                   NB. Box by suit
+ââââ¬âââ¬âââ¬âââ
+â6â â6â¡â6â¢â6â£â
+â7â â7â¡â7â¢â7â£â
+â8â â8â¡â8â¢â8â£â
+â9â â9â¡â9â¢â9â£â
+âTâ âTâ¡âTâ¢âTâ£â
+âJâ âJâ¡âJâ¢âJâ£â
+âQâ âQâ¡âQâ¢âQâ£â
+âKâ âKâ¡âKâ¢âKâ£â
+âAâ âAâ¡âAâ¢âAâ£â
+ââââ´âââ´âââ´âââ
+Note: x v"0 y is equivalent to x v"0 0 y
+Note: (,) append has a rank of _ _
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+**** More Information ****
+1. Important point: u"n does not change the rank of u.
+Every verb has a rank of its own that can never be changed at call-time. u"n creates a new verb that is executed on each n-cell of the operands. But the actual rank of u doesn't get suppressed. It comes into play when u is executed on these n-cell(s).
+2. Because u"n causes u to be executed multiple times, it resembles looping in other languages.
+Multiple application of u"n correspond to nested loops, as shown by "More Examples" 1 below.
+3. Every verb has both monadic rank and dyadic rank, with the appropriate rank being selected depending on whether the verb is executed as a monad or as a dyad.
+The monadic rank is a single number; the dyadic rank is two numbers, one for x and one for y.
+You may think of your verb as just a monad or just a dyad, but nothing prevents someone from trying to execute it with either valence.
+(But sometimes J may signal an execution error.)
+u"n always specifies both the monadic and dyadic ranks. n itself may be an atom or a list of up to 3 numbers; the ranks will be set as follows:
+            The ranks specified by n
+           n   Monadic rank Dyadic rank
+                            left right
+           n           n      n     n
+        n0 n1         n1     n0     n1
+      n0 n1 n2        n0     n1     n2
+4. u"n may specify a negative value in n. u is still executed on n-cells, but with n negative the rank of the cell depends_on_the_rank_of_the_argument.
+   <"_1 i. 3  NB. Operand rank 1; _1-cells are atoms
++-+-+-+
+|0|1|2|
++-+-+-+
+   <"_1 i. 2 3  NB. Operand rank 2; _1-cells are lists
++-----+-----+
+|0 1 2|3 4 5|
++-----+-----+
+5. To see what the rank of a verb u is, execute u b. 0
+   + b. 0
+0 0 0
+   +"0 1 b. 0
+1 0 1
+6. For a more relaxed explanation of Rank, see Rank_in_a_hurry, which contains links to more authoritative treatments of the concept of Rank and its uses.
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+**** More Examples ****
+1. Create a Punnett square representing a dihybrid cross.
+   NB. First, a verb to create the result of a single breeding
+   NB. x and y are alleles (R, r and A, a)
+   cross =: dyad define
+alleles =. (>x) , (>y)   NB. join the genotypes
+< alleles /: 'RrAa' i. alleles   NB. sort into canonical order
+)
+
+   NB. Example: a single cross
+   (<'Ra') cross (<'rA')
++----+
+|RrAa|
++----+
+
+   NB. Define all the possible genotypes
+   genotypes =: ;: 'RA Ra rA ra'
+
+   NB. Create the Punnett square of all possible crosses
+   genotypes cross"0 0"0 1 genotypes
++----+----+----+----+
+|RRAA|RRAa|RrAA|RrAa|
++----+----+----+----+
+|RRAa|RRaa|RrAa|Rraa|
++----+----+----+----+
+|RrAA|RrAa|rrAA|rrAa|
++----+----+----+----+
+|RrAa|Rraa|rrAa|rraa|
++----+----+----+----+
+Explanation of the verb cross"0 0"0 1 :
+    * The "0 1 means, Apply the verb cross"0 0 on each atom of x and each list of y. Since x and y are both lists, this means, Apply cross"0 0 4 times, with y each time equal to genotypes and x set to each atom of genotypes in turn.
+    * A single application of cross"0 0 will then have an atom for x and the list genotypes for y. The "0 0 means, Apply cross 4 times, with x each time equal to the atom, and y set to each atom of genotypes in turn.
+    * The result of each application of cross is a single box. Each use of "0 0 collects these into a list, which is its result.
+    * "0 1 collects these lists into a table, which is the final result.
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+**** Details ****
+1. u can be a cyclic_gerund as in the example given above. Because gerunds are nouns, and non-gerund noun values of u produce constant_verbs, a cyclic gerund is recognized only when:
+    * the rank n is not all infinite
+    * u is a list of boxes (not an atom)
+    * u is a well-formed gerund.
+Otherwise m"n is contrued as a constant verb.
+2. The rank of a verb cannot actually be negative. If n is negative in u"n, The actual rank of u"n will be infinite, but u"n will apply u to n-cells of the argument.
+   <"_1 0 0 b. 0   NB. Actual rank _, but applied on _1-cells
+_ 0 0
+3. In place of the operand (noun) n, you can use any verb v. This is equivalent to setting n equal to the list of ranks of verb v. See Copy_Rank.
+
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+
+Retrieved from "https://code.jsoftware.com/mediawiki/index.php?title=Vocabulary/quote&oldid=30673"
+Category:
+    * Voc
+***** Navigation menu *****
+**** Personal tools ****
+    * Log_in
+**** Namespaces ****
+    * Page
+    * Discussion
+??
+**** Variants ****
+**** Views ****
+    * Read
+    * View_source
+    * View_history
+??
+**** More ****
+**** Search ****
+[Unknown INPUT type][Search][Go]
+**** Navigation ****
+    * New_Users
+    * Guides
+    * NuVoc
+    * System
+    * Showcase
+    * Library
+    * Community
+    * Recent_changes
+    * Random_page
+    * J_wiki_search
+**** Tools ****
+    * What_links_here
+    * Related_changes
+    * Special_pages
+    * Printable_version
+    * Permanent_link
+    * Page_information
+    * Cite_this_page
+    * This page was last edited on 19 May 2021, at 14:36.
+    * About_J_Wiki
+    * [Powered_by_MediaWiki]

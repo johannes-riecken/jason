@@ -1,0 +1,89 @@
+
+
+
+
+
+
+
+
+
+****** Vocabulary/ncapbcapdot ******
+From J Wiki
+< Vocabulary
+Jump to: navigation, search
+>> <<   Back_to:_Vocabulary Thru_to:_Dictionary
+      NB. Comment Noun/Other
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+Used to insert a comment in J code, either in the J session or in a script.
+Everything from NB. to the end-of-line (LF) will be ignored by the interpreter.
+foo=: verb define     NB. you can put a comment here to describe the verb.
+NB. A comment can have a line to itself,
+NB.
+NB. -or it can stand in for a blank line
+
+NB. -but actual blank lines are allowed too
+smoutput 'y=' ; y     NB. you can have a trailing comment,
+NB. -but not a leading comment, except to dummy out the line:
+NB. smoutput 'y=' ; y
+NB.You can often crush the comment right up to the period
+NB. ...but it doesn't like to be followed directly by a period or a colon
+NB. -so it's best to follow NB. by a space.
+)
+NB. but don't append a comment to the final ')' or else: syntax error
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+**** Common uses ****
+Insert narrative in application code, or dummy-out unwanted lines which you don't yet want to delete altogether
+If you have to comment out an entire definition in a script, consider using Explicit_Definition (0 : 0) or (noun define) or (0 define)
+0 : 0
+unwantedverb =: dyad define
+NB. The above 0 : 0 turns everything into an anonymous noun
+NB. down to the closing right parenthesis
+NB. including the "dyad define" line.
+NB. But without altering the text of the original definition.
+NB. It will be a "no-operation" when the script is loaded.
+z =. x + y
+z return.
+)
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+
+Retrieved from "https://code.jsoftware.com/mediawiki/index.php?title=Vocabulary/ncapbcapdot&oldid=27070"
+Category:
+    * Voc
+***** Navigation menu *****
+**** Personal tools ****
+    * Log_in
+**** Namespaces ****
+    * Page
+    * Discussion
+??
+**** Variants ****
+**** Views ****
+    * Read
+    * View_source
+    * View_history
+??
+**** More ****
+**** Search ****
+[Unknown INPUT type][Search][Go]
+**** Navigation ****
+    * New_Users
+    * Guides
+    * NuVoc
+    * System
+    * Showcase
+    * Library
+    * Community
+    * Recent_changes
+    * Random_page
+    * J_wiki_search
+**** Tools ****
+    * What_links_here
+    * Related_changes
+    * Special_pages
+    * Printable_version
+    * Permanent_link
+    * Page_information
+    * Cite_this_page
+    * This page was last edited on 30 September 2019, at 03:22.
+    * About_J_Wiki
+    * [Powered_by_MediaWiki]

@@ -1,0 +1,107 @@
+
+
+
+
+
+
+
+
+
+****** Vocabulary/fordot ******
+From J Wiki
+< Vocabulary
+Jump to: navigation, search
+>> <<   Back_to:_Vocabulary Thru_to:_Dictionary
+      for. noun do. body end. Repeat for each item Control
+      for_ijk. noun do. body end. Repeat for each item, named Control
+Valid only inside an explicit_definition.
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+Execute the ensuing block, or body, which starts after the next do., once for each item of the noun, which results from initial evaluation of a T-block.
+   for. i. nloops do.  NB. loop nloops times
+<loop body>
+   end.
+
+   for_i. 'for';'each';'word' do.  NB. loop 3 times, with i successively assuming the value of the words
+<loop body>
+   end.
+Use (for_ijk.) instead of (for.) to give a name referencing the successive items. At each iterationâ¦
+    * (ijk) takes the value of the current item, and
+    * (ijk_index) takes the values: (0, 1, 2, â¦) in turn.
+(ijk) (here) is a representative pronoun whose value you can inspect (read-only) at each iteration. Substitute your own choice of name, e.g. (i), which will also generate (i_index).
+If you use for. with no name, the loop will be executed once for each item of the T-block, and the actual values in the T-block noun are immaterial.
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+**** Common uses ****
+1. Execute a given block 3 times
+3 : 0''
+for. i.3 do.
+  smoutput 'alpha'
+end.
+)
+alpha
+alpha
+alpha
+When you use (for.) the statements within the block can't see the actual items of the T-block.
+2. Execute a given block once for each item of a given noun, viz. (0.5 + i.3), inspecting its value in turn, also its index in the list:
+3 : 0''
+for_ijk. 0.5 + i.3 do.
+  smoutput 'bravo' ; ijk ; ijk_index
+end.
+)
+âââââââ¬ââââ¬ââ
+âbravoâ0.5â0â
+âââââââ´ââââ´ââ
+âââââââ¬ââââ¬ââ
+âbravoâ1.5â1â
+âââââââ´ââââ´ââ
+âââââââ¬ââââ¬ââ
+âbravoâ2.5â2â
+âââââââ´ââââ´ââ
+**** Details ****
+   1. The result of the T-block, which gives the values to be repeated over, may be a noun of any rank. The loop is executed once for each item of the T-block.
+   2. At the end of a for_ijk. loop, the names ijk and ijk_index remain locally defined.
+    * If the loop was exited by break. or goto., the names simply retain their latest values.
+    * If the loop was exited by executing all the iterations, ijk is set to an empty list and ijk_index is set to the number of iterations that were executed.
+**** Related Primitives ****
+You may use these control words inside a for-loop:
+    * Terminate_loop (break.) â¦see this link for a code sample.
+    * Terminate_Iteration (continue.)
+
+Retrieved from "https://code.jsoftware.com/mediawiki/index.php?title=Vocabulary/fordot&oldid=28633"
+***** Navigation menu *****
+**** Personal tools ****
+    * Log_in
+**** Namespaces ****
+    * Page
+    * Discussion
+??
+**** Variants ****
+**** Views ****
+    * Read
+    * View_source
+    * View_history
+??
+**** More ****
+**** Search ****
+[Unknown INPUT type][Search][Go]
+**** Navigation ****
+    * New_Users
+    * Guides
+    * NuVoc
+    * System
+    * Showcase
+    * Library
+    * Community
+    * Recent_changes
+    * Random_page
+    * J_wiki_search
+**** Tools ****
+    * What_links_here
+    * Related_changes
+    * Special_pages
+    * Printable_version
+    * Permanent_link
+    * Page_information
+    * Cite_this_page
+    * This page was last edited on 21 May 2020, at 20:55.
+    * About_J_Wiki
+    * [Powered_by_MediaWiki]

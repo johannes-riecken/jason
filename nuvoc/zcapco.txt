@@ -1,0 +1,95 @@
+
+
+
+
+
+
+
+
+
+****** Vocabulary/zcapco ******
+From J Wiki
+< Vocabulary
+Jump to: navigation, search
+>> <<   Down_to:_Dyad   Back_to:_Vocabulary
+      Z: y Terminate Fold
+Rank_Infinity -- operates on x and y as a whole -- WHY_IS_THIS_IMPORTANT?
+
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+Terminates Fold, in whole or part.
+_2 Z: 0   NB. no-op
+_2 Z: 1   NB. force termination of overrunning Fold
+The phrase (x Z: 1) is the only way to terminate F. and F: .
+But the primitive Z: can prematurely terminate any Fold, or skip the production of wasted data in any given iteration of Fold.
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+**** Common Uses ****
+1. Halt Fold (F:) after 15 calls of Fold operand u.
+   COUNT=: 15
+
+   u=: __&$: : (4 : 0)
+_2 Z: -.*COUNT=:COUNT-1
+y+1 return.  NB. sample recurrence relation for Fold
+)
+
+   u F: ] 10
+11 12 13 14 15 16 17 18 19 20 21 22 23 24
+Deprecated in favor of _3&Z: as a safety measure to prevent a hard loop whilst developing code.
+
+2. Increase computational efficiency by aborting a wasteful computation.
+Similar code to #1 except:
+    * the x-argument of Z: should be an integer in the list: (_1 0 1).
+    * the y-argument of Z: should be a boolean condition detecting a wasteful pass of u.
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+**** More Information ****
+The result of (x Z: y) is always $0 (an empty list).
+    * If y is 0, no action is performed.
+    * If y is 1, the action depends on x as shown in the table below.
+ 
+ ___________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
+| Executed phrase | Effect__________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________|
+|  _3 Z: 1        |If the Fold has already started execution of u at least y times, abort the fold with a fold limit error. Otherwise continue.                                                                                                                                                                     |
+|_________________|Useful_to_ensure_that_an_unlimited_fold_(viz._F._or_F:)_does_not_run_forever.____________________________________________________________________________________________________________________________________________________________________________________________________________________|
+| __2_Z:_1________|Execution_of_the_enclosing_Fold_terminates_immediately,_with_the_result_being_the_result_after_the_last_execution_of_v._If_nothing_has_been_added_to_the_overall_result,_a_domain_error_is_raised._______________________________________________________________________________________________|
+| __1_Z:_1________|Execution_of_the_current_iteration_terminates_immediately._The_next_iteration_begins_with_the_next_new_value_of_x._The_value_of_y_in_the_next_iteration_is_the_result_of_the_most_recent_execution_of_u_that_ran_to_completion._Nothing_is_added_to_the_overall_result_for_the_current_iteration.|
+| _0_Z:_1_________|Execution_of_the_enclosing_Fold_continues,_but_the_result_of_the_current_execution_of_v_is_ignored._For_Fold_Multiple,_nothing_is_added_to_the_overall_result._For_Fold_Single,_the_result_of_v_does_not_become_the_final_result.________________________________________________________________|
+| _1_Z:_1_________|Execution_of_the_enclosing_Fold_continues_but_stops_after_the_next_completion_of_v.______________________________________________________________________________________________________________________________________________________________________________________________________________|
+
+Retrieved from "https://code.jsoftware.com/mediawiki/index.php?title=Vocabulary/zcapco&oldid=26818"
+***** Navigation menu *****
+**** Personal tools ****
+    * Log_in
+**** Namespaces ****
+    * Page
+    * Discussion
+??
+**** Variants ****
+**** Views ****
+    * Read
+    * View_source
+    * View_history
+??
+**** More ****
+**** Search ****
+[Unknown INPUT type][Search][Go]
+**** Navigation ****
+    * New_Users
+    * Guides
+    * NuVoc
+    * System
+    * Showcase
+    * Library
+    * Community
+    * Recent_changes
+    * Random_page
+    * J_wiki_search
+**** Tools ****
+    * What_links_here
+    * Related_changes
+    * Special_pages
+    * Printable_version
+    * Permanent_link
+    * Page_information
+    * Cite_this_page
+    * This page was last edited on 2 September 2019, at 02:27.
+    * About_J_Wiki
+    * [Powered_by_MediaWiki]

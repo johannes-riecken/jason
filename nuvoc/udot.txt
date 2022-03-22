@@ -1,0 +1,152 @@
+
+
+
+
+
+
+
+
+
+****** Vocabulary/udot ******
+From J Wiki
+< Vocabulary
+Jump to: navigation, search
+<<   Back_to:_Vocabulary
+      u. Enhanced Operand
+      v. Enhanced Operand
+Rank_Infinity -- operates on x and y as a whole -- WHY_IS_THIS_IMPORTANT?
+
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+These primitive verbs are replacements for Operand u and v (inside the body of the explicit_definition of a modifier) which may succeed in cases where the modifier fails with value_error.
+myAdverb=: adverb : 'u/ y'
+myEnhancedAdverb=: adverb : 'u./ y'  NB. enhanced alternative
+
+myConjunction=: conjunction : 'u&v y'
+myEnhancedConjunction=: conjunction : 'u.&v. y'  NB. enhanced alternative
+     [Information.png] In what follows, only u. will be described, and only in the context of adverbs. This simplifies the treatment.
+     But what is true for u. is also true for v. â in any modifier (adverb or conjunction).
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+**** Common uses ****
+1. Allow a user-written adverb to accept for an operand a private verb within the body of its caller â e.g. myplus=.+ below
+Au=: adverb : 'u/ y'
+Audot=: adverb : 'u./ y'
+
+usesAu=: verb define
+myplus=. +
+smoutput myplus Au y
+)
+
+   usesAu 1 2 3
+|value error: usesAu
+|       u/y
+
+usesAudot=: verb define
+myplus=. +
+smoutput myplus Audot y
+)
+
+   usesAudot 1 2 3
+6
+Adverbs Audot and Au differ only in the use of u. in place of u . Likewise the verb usesAudot differs from usesAu only by calling Audot instead of Au.
+Entering the body of adverb Au creates a namespace based on the current locale. This does not include myplus â a private verb inside the body of the verb usesAu. This causes a value error for u at the point it attempts to become (myplus).
+In contrast, thanks to (u.) the adverb Audot, after finding the value of u in its own namespace, switches to the namespace that was current just before its body was entered, and executes the value in that namespace. That value, myplus, is defined in the new namespace and is successfully executed there.
+
+2. Within the body of an explicit verb, fetch the name of the locale it was called from:
+caller_z_=: verb define
+smoutput '+++ caller: entered'
+utility 0
+)
+
+utility_z_=: verb define
+u=. coname
+smoutput 'utility' ; y ; 'called from locale' ; u.''
+)
+
+caller_base_''
++++ caller: entered
+âââââââââ¬ââ¬âââââââââââââââââââ¬âââââ
+âutilityâ0âcalled from localeâbaseâ
+âââââââââ´ââ´âââââââââââââââââââ´âââââ
+
+caller_j_''  NB. any locale would serve here
++++ caller: entered
+âââââââââ¬ââ¬âââââââââââââââââââ¬ââ
+âutilityâ0âcalled from localeâjâ
+âââââââââ´ââ´âââââââââââââââââââ´ââ
+This trick shows that u. is not restricted to adverbs (and conjunctions) but is useful within the body of an explicit verb too.
+OBSERVATION: Inside a verb definition, as opposed to an adverb definition, u. has no special meaning as the Operand (verbs don't have "operands", they only have arguments). Nor does u â it is simply a private verb. Nevertheless the very fact of its name being u causes (u.) to get replaced by the value (coname) you've assigned to it. You must of course assign the value to u . Not to u. â which is read-only and can't be assigned-to.
+
+3. Within the body of an explicit verb, fetch the name of the verb it was called from:
+caller=: verb define
+smoutput '+++ Entered: ', me=. 'caller'
+utility 0
+)
+
+utility=: verb define
+u=. ".
+smoutput 'utility' ; y ; 'called by verb named' ; u.'me'
+)
+
+   caller''
++++ Entered: caller
+âââââââââ¬ââ¬âââââââââââââââââââââ¬âââââââ
+âutilityâ0âcalled by verb namedâcallerâ
+âââââââââ´ââ´âââââââââââââââââââââ´âââââââ
+NOTE: Unlike #2 above, this trick needs caller to expose something for utility to seek and find. But it is only an innocuous local assignment to a private name, e.g. me. If you try to emulate this technique without the use of u. or v. you will need to assign the verb's name to a global cache (e.g. me=:'caller') â a nuisance to maintain in a large amount of code, besides being prone to conflict between nested callers.
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+**** More Information ****
+   1. Remember that u. is a primitive verb having infinite rank.
+   2. The operand must already be defined as a verb in the local namespace.
+      The local namespace must exist, i.e. don't use u. in a statement entered in the session window (in JQt: the Term Window).
+   3. You can use u. in compounds, gerunds, etc.
+   4. You can't return a bare (u.). If the returned value (noun or verb) of a modifier is or contains u. it gets replaced by its operand.
+      J needs to do this because the returned value is destined for the caller's environment, where a bare u. stands for something else entirely, if anything.
+   5. However you can use u. as the operand of another modifier, either bare or in compounds. Executing u. in the called modifier will execute the corresponding operand in its proper environment.
+   6. u. must not be used as the operand of a modifier which internally refers to its operand as u or v (in_very_old_J_code_this_may_even_be_x_or_y). Such a modifier will execute its operand in the wrong environment.
+   7. If you use u. in the definition of a verb and then fix the verb using Fix (f.) then u. gets replaced by the current operand and the intended environment is lost.
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+**** Details ****
+   1. The environment in the caller that is seen by u. is the environment in force when the caller started executing the called modifier.
+=======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+
+Retrieved from "https://code.jsoftware.com/mediawiki/index.php?title=Vocabulary/udot&oldid=26727"
+Category:
+    * Voc
+***** Navigation menu *****
+**** Personal tools ****
+    * Log_in
+**** Namespaces ****
+    * Page
+    * Discussion
+??
+**** Variants ****
+**** Views ****
+    * Read
+    * View_source
+    * View_history
+??
+**** More ****
+**** Search ****
+[Unknown INPUT type][Search][Go]
+**** Navigation ****
+    * New_Users
+    * Guides
+    * NuVoc
+    * System
+    * Showcase
+    * Library
+    * Community
+    * Recent_changes
+    * Random_page
+    * J_wiki_search
+**** Tools ****
+    * What_links_here
+    * Related_changes
+    * Special_pages
+    * Printable_version
+    * Permanent_link
+    * Page_information
+    * Cite_this_page
+    * This page was last edited on 30 August 2019, at 16:04.
+    * About_J_Wiki
+    * [Powered_by_MediaWiki]
