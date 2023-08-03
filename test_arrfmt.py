@@ -4,7 +4,7 @@ import numpy as np
 
 
 class JToPythonTestCase(unittest.TestCase):
-    def testZeroDim(self):
+    def testZeroDim(self) -> None:
         self.assertEqual("1", j_to_python("1"), '0-dimensional (scalar)')
         self.assertEqual("[1, 2, 3]", j_to_python("1 2 3"), '1-dimensional (vector)')
         self.assertEqual("[[1, 2, 3], [4, 5, 6]]", j_to_python("1 2 3\n4 5 6"), '2-dimensional (matrix)')
@@ -12,7 +12,7 @@ class JToPythonTestCase(unittest.TestCase):
 
 
 class PythonToJTestCase(unittest.TestCase):
-    def testZeroDim(self):
+    def testZeroDim(self) -> None:
         self.assertEqual(python_to_j(str(np.array(5).tolist())), "5")
         self.assertEqual(python_to_j(str(np.array([1, 2, 3]).tolist())), "1 2 3")
         self.assertEqual(python_to_j(str(np.array([[1, 2], [3, 4]]).tolist())), "1 2\n3 4")

@@ -1,8 +1,9 @@
+from typing import List, Any, Iterator
 import numpy as np
 import ast
 
 
-def python_to_j(input_str):
+def python_to_j(input_str: str) -> str:
     # Parse the input string as a Python literal
     data = ast.literal_eval(input_str)
     ndim = np.array(data).ndim
@@ -12,11 +13,11 @@ def python_to_j(input_str):
     return concatenate_strings(np.array(data).astype(str), seps)
 
 
-def j_to_python(j_array):
+def j_to_python(j_array: str) -> str:
     """
     Convert J console output to Python array representation.
     """
-    sep_stack = []
+    sep_stack: List[str] = []
     it = _sep()
     while True:
         sep = next(it)
@@ -27,17 +28,17 @@ def j_to_python(j_array):
     return repr(np.array(python_array).astype(int).tolist())
 
 
-def _sep():
+def _sep() -> Iterator[str]:
     yield ' '
-    i = 1
+    i: int = 1
     while True:
         yield "\n" * i
         i += 1
 
 
-def concatenate_strings(x, seps):
+def concatenate_strings(x: np.ndarray[str, Any], seps: List[str]) -> str:
     # Define a helper function to concatenate strings with a specific separator
-    def concatenate_with_sep(arr, sep):
+    def concatenate_with_sep(arr: np.ndarray[str, Any], sep: str) -> str:
         return sep.join(arr)
 
     # Get the number of dimensions of the input array
@@ -54,11 +55,16 @@ def concatenate_strings(x, seps):
 
         # Concatenate the strings along the current axis
         x = np.apply_along_axis(concatenate_with_sep, i, x, sep)
+    # if x is of type np.ndarray, convert it to a string
+    ret: str = ""
+    if isinstance(x, str):
+        ret = x
+    if isinstance(x, np.ndarray):
+        ret = x.item()
+    return ret
 
-    return x
 
-
-def split_string_reverse_order(s, separators):
+def split_string_reverse_order(s: str, separators: List[str]) -> Any:
     # Base case: if there are no more separators, return the string as is.
     if not separators:
         return s
