@@ -46,7 +46,8 @@ def concatenate_strings(x: np.ndarray[str, Any], seps: List[str]) -> str:
 
     # Check that the number of separators matches the number of dimensions
     if len(seps) != ndim:
-        raise ValueError(f"The number of separators ({len(seps)}) must match the number of dimensions of the array ({ndim})")
+        raise ValueError(
+            f"The number of separators ({len(seps)}) must match the number of dimensions of the array ({ndim})")
 
     # Iteratively concatenate the strings along each axis
     for i in range(ndim-1, -1, -1):
@@ -76,6 +77,7 @@ def split_string_reverse_order(s: str, separators: List[str]) -> Any:
     split_s = s.split(separator)
 
     # Recursively split each substring using the remaining separators
-    split_s = [split_string_reverse_order(sub_s, separators[:-1]) for sub_s in split_s]
+    split_s = [split_string_reverse_order(
+        sub_s, separators[:-1]) for sub_s in split_s]
 
     return split_s
