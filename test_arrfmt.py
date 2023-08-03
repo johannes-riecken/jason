@@ -1,5 +1,5 @@
 import unittest
-from formatter import j_to_python, python_to_j
+from arrfmt import j_to_python, python_to_j
 import numpy as np
 
 
