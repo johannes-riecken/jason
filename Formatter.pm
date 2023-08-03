@@ -1,14 +1,22 @@
 #!/usr/bin/perl -w
+package Formatter;
 use v5.30;
 use Data::Dumper;
 use List::Util qw(max);
 
-$/ = undef;
-$Data::Dumper::Indent = 0;
-$Data::Dumper::Terse = 1;
-$_ = <STDIN>;
+sub main {
+    $/ = undef;
+    $_ = <STDIN>;
+    say jToLol($_);
+}
 
-my $max = max(map { length } /(\n+)/g);
+sub jToLol {
+    my ($in) = @_;
+    $Data::Dumper::Indent = 0;
+    $Data::Dumper::Terse = 1;
+    my $max = max(map { length } ($in =~ /(\n+)/g));
+    return Data::Dumper::Dumper([splitAtLevel($max, $in)]);
+}
 
 # splitAtLevel splits one axis
 sub splitAtLevel {
@@ -29,4 +37,4 @@ sub delim {
     return "\n" x $n;
 }
 
-say Dumper [splitAtLevel($max, $_)];
+main unless caller;
