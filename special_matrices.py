@@ -29,10 +29,13 @@ def generate_adjacency_matrix(graph: Dict[int, List[int]]) -> np.ndarray[int, An
     """
     nodes = list(graph.keys())
     A = np.zeros((len(nodes), len(nodes)))
-    for node in graph:
-        for conn_node in graph[node]:
-            A[node, conn_node] = 1
+    row_indices, col_indices = zip(*[(node, conn_node) for node in graph for conn_node in graph[node]])
+    A[row_indices, col_indices] = 1
     return A
+
+
+# # Let's test the function with the same graph
+# generate_adjacency_matrix(graph_test)
 
 
 def generate_degree_matrix(graph: Dict[int, List[int]]) -> np.ndarray[int, Any]:
