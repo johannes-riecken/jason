@@ -7,9 +7,7 @@ def python_to_j(input_str: str) -> str:
     # Parse the input string as a Python literal
     data = ast.literal_eval(input_str)
     ndim = np.array(data).ndim
-    it = _sep()
-    seps = [next(it) for _ in range(ndim)]
-    seps.reverse()
+    seps = list(_sep_finite(ndim))[::-1]
     return concatenate_strings(np.array(data).astype(str), seps)
 
 
@@ -34,6 +32,14 @@ def _sep() -> Iterator[str]:
     while True:
         yield "\n" * i
         i += 1
+
+
+def _sep_finite(ndim: int) -> Iterator[str]:
+    for i in range(ndim):
+        if i == 0:
+            yield ' '
+        else:
+            yield "\n" * i
 
 
 def concatenate_strings(x: np.ndarray[str, Any], seps: List[str]) -> str:
