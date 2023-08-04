@@ -1,27 +1,28 @@
 import numpy as np
-from scipy.sparse import csr_matrix
-from scipy.linalg import eigvalsh
-import networkx as nx
+# from scipy.sparse import csr_matrix
+# from scipy.linalg import eigvalsh
+# import networkx as nx
+from typing import Any, Dict, List
 
 
-def draw_graph_from_adjacency_matrix(A):
-    """
-    Draw a graph from a given adjacency matrix.
-    """
-    # Create a new graph
-    G = nx.Graph()
+# def draw_graph_from_adjacency_matrix(A: np.ndarray[int, Any]):
+#     """
+#     Draw a graph from a given adjacency matrix.
+#     """
+#     # Create a new graph
+#     G = nx.Graph()
 
-    # Add edges to the graph based on the adjacency matrix
-    for i in range(A.shape[0]):
-        for j in range(i+1, A.shape[1]):  # Only need to consider upper triangular part of matrix
-            if A[i, j] != 0:
-                G.add_edge(i, j)
+#     # Add edges to the graph based on the adjacency matrix
+#     for i in range(A.shape[0]):
+#         for j in range(i+1, A.shape[1]):  # Only need to consider upper triangular part of matrix
+#             if A[i, j] != 0:
+#                 G.add_edge(i, j)
 
-    # Draw the graph
-    nx.draw(G, with_labels=True, node_color='lightblue', node_size=1200)
+#     # Draw the graph
+#     nx.draw(G, with_labels=True, node_color='lightblue', node_size=1200)
 
 
-def generate_adjacency_matrix(graph):
+def generate_adjacency_matrix(graph: Dict[int, List[int]]) -> np.ndarray[int, Any]:
     """
     Generate the adjacency matrix for a given graph.
     The graph parameter should be a dictionary where keys are nodes and values are lists of nodes that the key node is connected to.
@@ -34,7 +35,7 @@ def generate_adjacency_matrix(graph):
     return A
 
 
-def generate_degree_matrix(graph):
+def generate_degree_matrix(graph: Dict[int, List[int]]) -> np.ndarray[int, Any]:
     """
     Generate the degree matrix for a given graph.
     The graph parameter should be a dictionary where keys are nodes and values are lists of nodes that the key node is connected to.
@@ -45,45 +46,45 @@ def generate_degree_matrix(graph):
     return D
 
 
-def generate_kirchhoff_from_graph(graph):
+def generate_kirchhoff_from_graph(graph: Dict[int, List[int]]) -> np.ndarray[int, Any]:
     """
     Generate the Kirchhoff (Laplacian) matrix for a given graph.
     The graph parameter should be a dictionary where keys are nodes and values are lists of nodes that the key node is connected to.
     """
     A = generate_adjacency_matrix(graph)
     D = generate_degree_matrix(graph)
-    L = D - A
+    L: np.ndarray[int, Any] = D - A
     return L
 
 
-def network_analysis(graph):
-    """
-    Perform a network structure analysis using the Laplacian matrix.
-    """
-    # Generate the Laplacian matrix
-    L = generate_kirchhoff_from_graph(graph)
+# def network_analysis(graph):
+#     """
+#     Perform a network structure analysis using the Laplacian matrix.
+#     """
+#     # Generate the Laplacian matrix
+#     L = generate_kirchhoff_from_graph(graph)
 
-    # Calculate the degree of each node
-    degrees = np.diag(L)
+#     # Calculate the degree of each node
+#     degrees = np.diag(L)
 
-    # Calculate the number of connected components (number of zero eigenvalues)
-    eigenvalues = eigvalsh(L)
-    num_connected_components = np.sum(eigenvalues < 1e-10)  # Small threshold to account for numerical errors
+#     # Calculate the number of connected components (number of zero eigenvalues)
+#     eigenvalues = eigvalsh(L)
+#     num_connected_components = np.sum(eigenvalues < 1e-10)  # Small threshold to account for numerical errors
 
-    # Calculate the number of spanning trees (for a connected graph)
-    if num_connected_components == 1:
-        num_spanning_trees = 1/len(graph) * np.prod(eigenvalues[1:])  # Skip the first eigenvalue (which should be zero)
-    else:
-        num_spanning_trees = None  # This formula only applies for connected graphs
+#     # Calculate the number of spanning trees (for a connected graph)
+#     if num_connected_components == 1:
+#         num_spanning_trees = 1/len(graph) * np.prod(eigenvalues[1:])  # Skip the first eigenvalue (which should be zero)
+#     else:
+#         num_spanning_trees = None  # This formula only applies for connected graphs
 
-    return {
-        "degrees": degrees,
-        "num_connected_components": num_connected_components,
-        "num_spanning_trees": num_spanning_trees,
-    }
+#     return {
+#         "degrees": degrees,
+#         "num_connected_components": num_connected_components,
+#         "num_spanning_trees": num_spanning_trees,
+#     }
 
 
-def generate_circulant(n):
+def generate_circulant(n: int) -> np.ndarray[int, Any]:
     """
     Generate an nxn Kirchhoff matrix for a cyclic graph.
     """
@@ -96,7 +97,7 @@ def generate_circulant(n):
     return K_old
 
 
-def generate_kirchhoff_linear(n):
+def generate_kirchhoff_linear(n: int) -> np.ndarray[int, Any]:
     """
     Generate an nxn Kirchhoff matrix from a linear graph where the first and
     last nodes are connected to only one other node each..
@@ -112,14 +113,14 @@ def generate_kirchhoff_linear(n):
     return K
 
 
-def generate_kirchhoff(n):
+def generate_kirchhoff(n: int) -> np.ndarray[int, Any]:
     """
     Generate an nxn Kirchhoff matrix
     """
     return 2*np.eye(n) - np.eye(n, k=1) - np.eye(n, k=-1)
 
 
-def generate_upper_triangular(n):
+def generate_upper_triangular(n: int) -> np.ndarray[int, Any]:
     """
     Generate an nxn upper triangular matrix with ones on the diagonal and above.
     """
@@ -127,18 +128,18 @@ def generate_upper_triangular(n):
     return U
 
 
-def generate_bipartite(graph):
-    """
-    Generate a bipartite matrix from a given graph.
-    The graph parameter should be a dictionary where keys are nodes and values are lists of nodes that the key node is connected to.
-    """
-    nodes = list(graph.keys())
-    edges = [(node, conn_node) for node in graph for conn_node in graph[node]]
-    data = np.ones(len(edges))
-    row = [nodes.index(edge[0]) for edge in edges]
-    col = [nodes.index(edge[1]) for edge in edges]
-    B = csr_matrix((data, (row, col)), shape=(len(nodes), len(nodes)))
-    return B.toarray()
+# def generate_bipartite(graph):
+#     """
+#     Generate a bipartite matrix from a given graph.
+#     The graph parameter should be a dictionary where keys are nodes and values are lists of nodes that the key node is connected to.
+#     """
+#     nodes = list(graph.keys())
+#     edges = [(node, conn_node) for node in graph for conn_node in graph[node]]
+#     data = np.ones(len(edges))
+#     row = [nodes.index(edge[0]) for edge in edges]
+#     col = [nodes.index(edge[1]) for edge in edges]
+#     B = csr_matrix((data, (row, col)), shape=(len(nodes), len(nodes)))
+#     return B.toarray()
 
 
 # Let's test the functions with some inputs
@@ -147,7 +148,7 @@ C = generate_circulant(5)
 B = generate_kirchhoff_linear(5)
 U = generate_upper_triangular(5)
 graph = {0: [1, 2], 1: [0, 3], 2: [0, 3, 4], 3: [1, 2], 4: [2]}
-BP = generate_bipartite(graph)
+# BP = generate_bipartite(graph)
 
 print(K)
 print(C)
@@ -163,8 +164,8 @@ A[A == 2] = 0
 A[A == -1] = 1
 
 # Draw the graph corresponding to this adjacency matrix
-draw_graph_from_adjacency_matrix(A)
+# draw_graph_from_adjacency_matrix(A)
 
 
 graph = {0: [1, 2], 1: [0, 3], 2: [0, 3, 4], 3: [1, 2], 4: [2]}
-network_analysis(graph)
+# network_analysis(graph)
