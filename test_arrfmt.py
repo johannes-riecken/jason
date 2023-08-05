@@ -1,5 +1,5 @@
 import unittest
-from arrfmt import j_to_python, python_to_j
+from arrfmt import j_to_python, python_to_j, python_to_j_input
 import numpy as np
 
 
@@ -23,3 +23,7 @@ class PythonToJTestCase(unittest.TestCase):
             str(np.array([[1, 2], [3, 4]]).tolist())), "1 2\n3 4")
         self.assertEqual(python_to_j(str(np.array(
             [[[1, 2], [3, 4]], [[5, 6], [7, 8]]]).tolist())), "1 2\n3 4\n\n5 6\n7 8")
+
+class JToPythonInputTestCase(unittest.TestCase):
+    def testZeroDim(self) -> None:
+        self.assertEqual("2 2 2 $ 1 2 3 4 5 6 7 8", python_to_j_input("[[[1, 2], [3, 4]], [[5, 6], [7, 8]]]"), "3-dimensional")

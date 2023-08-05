@@ -11,6 +11,11 @@ def python_to_j(input_str: str) -> str:
     return concatenate_strings(np.array(data).astype(str), seps)
 
 
+def python_to_j_input(input_str: str) -> str:
+    a = np.array(ast.literal_eval(input_str)).astype(int)
+    return ' '.join(np.array(a.shape).astype(str)) + ' $ ' + ' '.join(a.ravel().astype(str))
+
+
 def j_to_python(j_array: str) -> str:
     """
     Convert J console output to Python array representation.
